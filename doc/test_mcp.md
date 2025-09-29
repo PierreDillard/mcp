@@ -192,3 +192,42 @@ This command will:
 - Generate the corresponding HLS manifest
 
 The encryption and conversion happen in a single pass, without complete re-segmentation.
+
+## Question: SDL Audio Debugging
+
+**Question:** How do I debug audio playback issues with SDL?
+
+**Answer (via MCP):**
+
+**Test:** `audio-sdl`
+
+**Input:** Basic SDL audio test setup
+
+
+
+**Debugging Commands:**
+```bash
+# Enable audio debugging
+gpac -logs=audio@debug -i input.mp4 aout
+
+# Test SDL audio output specifically
+gpac -i input.mp4 aout:drv=sdl
+
+# Debug with verbose logging
+gpac -logs=all@debug -i input.mp4 aout:drv=sdl
+
+# Check available audio drivers
+gpac -h aout
+
+# Test with specific SDL audio settings
+gpac -i input.mp4 aout:drv=sdl:freq=44100:ch=2:bps=16
+
+# Force audio format for debugging
+gpac -i input.mp4 aout:drv=sdl:fmt=s16
+```
+
+**Key debugging flags:**
+- `-logs=audio@debug`: Audio-specific debug logs
+- `aout:drv=sdl`: Force SDL audio driver
+- `freq/ch/bps`: Override audio parameters
+- `fmt`: Force specific audio format

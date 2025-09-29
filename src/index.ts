@@ -73,15 +73,37 @@ function clamp(n: number, min: number, max: number) {
 function normalize(s: string) { return s.toLowerCase(); }
 
 
-/** Very simple scoring (name > keywords > description) */
-function scoreTest(test: IndexedTest, query: string): number {
-  const normalizedQuery = normalize(query);
+/** Enhanced scoring with multi-keyword support and relevance weighting */
+function scoreTest(test: IndexedTest, keywords: string[]): number {
   let score = 0;
-  if (normalize(test.name).includes(normalizedQuery)) score += 5;
-  if (test.keywords.some(keyword => normalize(keyword).includes(normalizedQuery))) score += 3;
-  if ((test.description ?? "").toLowerCase().includes(normalizedQuery)) score += 2;
-  // bonus if a subtest name matches
-  if (test.subtests.some(subtest => normalize(subtest.subtestName).includes(normalizedQuery))) score += 2;
+
+  // Create unified textual corpus for search - pre-calculated index approach
+  const testCorpus = [
+    normalize(test.name),
+    ...test.keywords.map(normalize),
+    normalize(test.description ?? ""),
+    ...test.subtests.map(st => normalize(st.subtestName))
+  ].join(' ');
+
+  for (const keyword of keywords) {
+    const normalizedKeyword = normalize(keyword);
+    if (!testCorpus.includes(normalizedKeyword)) {
+      continue; // Skip if keyword is missing
+    }
+
+    // Apply weighting for each found keyword
+    if (normalize(test.name).includes(normalizedKeyword)) score += 5;
+    if (test.keywords.some(kw => normalize(kw).includes(normalizedKeyword))) score += 3;
+    if (normalize(test.description ?? "").includes(normalizedKeyword)) score += 2;
+    if (test.subtests.some(st => normalize(st.subtestName).includes(normalizedKeyword))) score += 2;
+  }
+  
+  // Bonus if multiple requested keywords are present (cumulative relevance)
+  const foundKeywordsCount = keywords.filter(kw => testCorpus.includes(normalize(kw))).length;
+  if (foundKeywordsCount > 1) {
+    score += foundKeywordsCount * 5; // Significant bonus for relevance
+  }
+  
   return score;
 }
 
@@ -105,18 +127,33 @@ function toTestSummaries(rows: IndexedTest[], includeSubtests = true) {
 // --- Tools ---
 server.tool(
   "find_tests_by_keywords",
+  "Search and filter GPAC functional tests from a structured XML catalog to find concrete usage examples. Ideal for answering 'How to do X with MP4Box/GPAC?' questions. Searches through test names, keywords, descriptions, and subtests to find the most relevant matches. Returns a relevance-sorted list of tests with descriptions and exact commands.",
   { 
-    keywords: z.array(z.string()).min(1),
-    limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
-    offset: z.number().int().min(0).optional(),
-    include_subtests: z.boolean().optional()
+    keywords: z.array(z.string()).min(1).describe("List of keywords or technical terms for the search. Use precise terms like 'DASH', 'encrypt', 'CENC', 'BIFS', 'import', 'AAC' for better results. Providing multiple keywords refines the search."),
+    limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe("Maximum number of tests to return. Optional, defaults to 10."),
+    offset: z.number().int().min(0).optional().describe("Starting index for pagination. Optional, defaults to 0."),
+    include_subtests: z.boolean().optional().describe("Whether to include subtest details in results. Optional, defaults to true.")
   },
   async ({ keywords, limit = DEFAULT_LIMIT, offset = 0, include_subtests = true }) => {
-    const query = keywords.join(" ");
+    // Filter out empty keywords and normalize
+    const cleanKeywords = keywords.filter(k => k.trim().length > 0);
     
-    // Search in the index
+    if (cleanKeywords.length === 0) {
+      return {
+        content: [{ type: "text", text: JSON.stringify({
+          total: 0,
+          offset,
+          limit,
+          returned: 0,
+          tests: [],
+          error: "No valid keywords provided"
+        }, null, 2) }]
+      };
+    }
+    
+    // Search in the index with enhanced multi-keyword scoring
     const matches = Array.from(testByName.values())
-      .map(test => ({ test, score: scoreTest(test, query) }))
+      .map(test => ({ test, score: scoreTest(test, cleanKeywords) }))
       .filter(({ score }) => score > 0)
       .sort((a, b) => b.score - a.score)
       .map(({ test }) => test);
@@ -217,7 +254,7 @@ server.tool(
     
     // Simple scoring based on goal matching
     const matches = allTests
-      .map(test => ({ test, score: scoreTest(test, goal) }))
+      .map(test => ({ test, score: scoreTest(test, [goal]) }))
       .filter(({ score }) => score > 0)
       .sort((a, b) => b.score - a.score);
 

@@ -43,7 +43,7 @@ Add this MCP server to your Claude Desktop configuration file:
   "mcpServers": {
     "gpac-testsuite": {
       "command": "node",
-      "args": ["/absolute/path/to/testsuite-mcp/dist/index.js"],
+      "args": ["/absolute/path/to/testsuite-mcp/dist/src/index.js"],
       "env": {
         "XML_TESTS_PATH": "/absolute/path/to/testsuite-mcp/all_tests_desriptions.xml",
         "SCRIPTS_DIR": "/absolute/path/to/testsuite-mcp/scripts"
