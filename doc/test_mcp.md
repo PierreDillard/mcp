@@ -312,3 +312,37 @@ gpac -logs=all@info -i input.mp4 vout aout
 From the test suite examples, GPAC uses this logging syntax throughout for debugging playback and I/O operations during media processing.
 
 *Note: The correct module name for I/O logging should be `mmio@debug`, not `io@debug`.
+
+## Question: DASH with AAC Parametric Stereo Explicit Mode
+
+**Question:** How can you create a DASH presentation (.mpd) with an AAC track in Parametric Stereo explicit mode?
+
+**Answer (via MCP):**
+
+To create a DASH presentation (.mpd) with an AAC track in Parametric Stereo explicit mode:
+
+**Step 1: Import AAC with Parametric Stereo explicit mode**
+```bash
+MP4Box -add input.aac:psx -new output.mp4
+```
+
+**Step 2: Create DASH presentation**
+```bash
+MP4Box -dash 1000 -rap output.mp4 -out presentation.mpd
+```
+
+**Complete workflow:**
+```bash
+# Import AAC with Parametric Stereo explicit mode
+MP4Box -add sbrps_fhg.aac:psx -new out/psx.mp4
+
+# Create DASH with 1000ms segments
+MP4Box -dash 1000 -rap psx.mp4 -out out/psx.mpd
+```
+
+**Key parameters:**
+- `:psx` - Enables Parametric Stereo explicit mode
+- `-dash 1000` - Creates DASH with 1000ms segments
+- `-rap` - Uses Random Access Points for segmentation
+
+This creates a DASH manifest with AAC Parametric Stereo explicit encoding.

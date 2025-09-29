@@ -9,6 +9,9 @@ import { loadScripts, readScriptSegment } from "./utils/scripts-index.js";
 const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_descriptions.xml";
 const SCRIPTS_DIR = process.env.SCRIPTS_DIR || "./scripts";
 
+// Anti-hallucination mode: only return exact matches from index
+const STRICT_MODE = true;
+
 const server = new McpServer({ name: "testsuite-mcp", version: "0.1.0" });
 
 // --- Boot + In-memory Index ---
@@ -304,9 +307,16 @@ if (/compositor:|ogl=/.test(cmd.toLowerCase()) && !/\b(render|rgb|pcm|decode|dum
       confidence: commandItem.score > 5 ? "high" : "medium"
     }));
 
-    const hint = items.length > 0
-      ? `Found ${items.length} relevant command(s).`
-      : `No matching commands found for "${goal}".`;
+    if (items.length === 0) {
+      return {
+        isError: true,
+        content: [
+          { type: "text", text: `No matching commands found for "${goal}".` }
+        ]
+      };
+    }
+
+    const hint = `Found ${items.length} relevant command(s).`;
 
     return {
       content: [{
