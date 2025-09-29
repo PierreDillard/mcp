@@ -133,16 +133,17 @@ function toTestSummaries(testRows: IndexedTest[], includeSubtests = true) {
 }
 
 // --- Tools ---
-server.tool(
-  "find_tests_by_keywords",
-  "Search GPAC tests by keywords",
-  {
+server.registerTool("find_tests_by_keywords", {
+  title: "Find GPAC tests by keywords",
+  description: "Search GPAC tests by keywords",
+  inputSchema: {
     keywords: z.array(z.string()).min(1).describe("List of search terms"),
     limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe("Maximum number of tests to return"),
     offset: z.number().int().min(0).optional().describe("Starting index for pagination"),
     include_subtests: z.boolean().optional().describe("Include subtest details")
-  },
-  async ({ keywords, limit = DEFAULT_LIMIT, offset = 0, include_subtests = true }) => {
+  }
+},
+  async ({ keywords, limit = DEFAULT_LIMIT, offset = 0, include_subtests = false }) => {
     // Filter out empty keywords and normalize
     const cleanKeywords = keywords.filter(k => k.trim().length > 0);
     
@@ -210,61 +211,39 @@ server.tool(
   }
 );
 
-server.tool(
-  "get_xml_test",
-  "Get complete XML test details",
-  {
+server.registerTool("get_xml_test", {
+  title: "Get complete XML test details",
+  description: "Get complete XML test details",
+  inputSchema: {
     name: z.string().describe("Test name to retrieve")
-  },
+  }
+},
   async ({ name }) => {
     const testData = getXmlTest(name);
-    if (!testData) throw new Error(`Unknown XML test: ${name}`);
+    if (!testData) {
+      return {
+        content: [{ type: "text", text: `Unknown XML test: ${name}` }],
+        isError: true
+      };
+    }
     return {
       content: [{ type: "text", text: JSON.stringify(testData, null, 2) }]
     };
   }
 );
 
-server.tool(
-  "dry_run_xml_test",
-  {
-    name: z.string().describe("Test name for dry-run script")
-  },
-  async ({ name }) => ({
-    content: [{ type: "text", text: buildDryRunScript(name) }]
-  })
-);
-
-/* server.tool(
-  "search_scripts",
-  { query: z.string().min(2), context: z.number().int().min(0).max(20).optional() },
-  async ({ query, context }) => ({
-    content: [{ type: "text", text: JSON.stringify(await searchScripts(query, context ?? 3), null, 2) }]
-  })
-); */
-
-server.tool(
-  "read_script",
-  {
-    path: z.string().describe("Script file path"),
-    start_line: z.number().int().min(1).describe("Starting line number"),
-    end_line: z.number().int().min(1).describe("Ending line number")
-  },
-  async ({ path, start_line, end_line }) => ({
-    content: [{ type: "text", text: await readScriptSegment(path, start_line, end_line) }]
-  })
-);
-
-// ------- Tool one-shot: trouve et renvoie directement des commandes -------
-const FIND_MAX_LIMIT = 5;           // on renvoie peu d'options, mais très pertinentes
+// ------- One-shot tool: find and return commands directly -------
+const FIND_MAX_LIMIT = 5;           
 const FIND_MAX_DESC_CHARS = 180;
 
-server.tool(
-  "find_commands_by_goal",
-  {
+server.registerTool("find_commands_by_goal", {
+  title: "Find GPAC commands by goal",
+  description: "Find commands that accomplish a specific goal",
+  inputSchema: {
     goal: z.string().min(2).describe("Goal to find commands for"),
     limit: z.number().int().min(1).max(10).optional().describe("Maximum number of commands to return")
-  },
+  }
+},
   async ({ goal, limit }) => {
     const query = goal.toLowerCase();
     const allTests = Array.from(testByName.values());
@@ -285,9 +264,16 @@ server.tool(
       for (const subtest of test.subtests) {
         const cmd = subtest.command;
         if (!cmd) continue;
+        const q = query; 
+let extra = 0;
+if (/\b-dash\b|\bcmaf=/.test(cmd.toLowerCase()) && /\bdash|cmaf|mpd|live|ondemand\b/.test(q)) extra += 4;
+if (/inspect:|analyze=on/.test(cmd.toLowerCase()) && /\binspect|analy(s|z)e|probe\b/.test(q)) extra += 3;
+if (/ccdec\b|\.vtt\b|\.ttml\b/.test(cmd.toLowerCase()) && /\bcc|subtitle|vtt|ttml|captions\b/.test(q)) extra += 3;
+if (/compositor:|ogl=/.test(cmd.toLowerCase()) && !/\b(render|rgb|pcm|decode|dump)\b/.test(q)) extra -= 2;
+
         
         // Score based on command content matching goal
-        const cmdScore = cmd.toLowerCase().includes(query) ? 10 : 1;
+     const cmdScore = (cmd.toLowerCase().includes(query) ? 10 : 1) + extra;
         
         cmdPool.push({
           test: test.name,
@@ -334,14 +320,7 @@ server.tool(
     };
   }
 );
-/* 
-server.tool(
-  "list_script_files",
-  {},
-  async () => ({
-    content: [{ type: "text", text: JSON.stringify(listScriptFiles(), null, 2) }]
-  })
-); */
+
 
 // --- Transport (stdio) ---
 const transport = new StdioServerTransport();

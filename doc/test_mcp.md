@@ -275,3 +275,40 @@ MP4Box -raw 1 input.mp4 -out output.avc
 - Extract without output file (default naming): `MP4Box -raw 1 input.mp4`
 
 The exported `.avc` file will contain the raw H.264/AVC bitstream that can be played by any AVC-compatible decoder or re-imported into other containers.
+
+## Question: MP4 Playback with Detailed Logs
+
+**Question:** What GPAC command plays an MP4 file while showing detailed logs of I/O operations?
+
+**Answer (via MCP):**
+
+Based on the GPAC test suite examples, here's the command to play an MP4 file while showing detailed logs of I/O operations:
+
+```bash
+gpac -logs=all@debug -i input.mp4 vout aout
+```
+
+**Key components:**
+- `-logs=all@debug`: Enables debug-level logging for all modules
+- `-i input.mp4`: Input MP4 file
+- `vout`: Video output filter for display
+- `aout`: Audio output filter for playback
+
+**Alternative approaches for specific logging:**
+```bash
+# I/O specific logging
+gpac -logs=io@debug -i input.mp4 vout aout
+
+# Network and container logging
+gpac -logs=network@debug,container@debug -i input.mp4 vout aout
+
+# Media-specific logging
+gpac -logs=media@debug -i input.mp4 vout aout
+
+# Maximum verbosity
+gpac -logs=all@info -i input.mp4 vout aout
+```
+
+From the test suite examples, GPAC uses this logging syntax throughout for debugging playback and I/O operations during media processing.
+
+*Note: The correct module name for I/O logging should be `mmio@debug`, not `io@debug`.
