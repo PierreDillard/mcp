@@ -231,3 +231,47 @@ gpac -i input.mp4 aout:drv=sdl:fmt=s16
 - `aout:drv=sdl`: Force SDL audio driver
 - `freq/ch/bps`: Override audio parameters
 - `fmt`: Force specific audio format
+
+## Question: Auxiliary Content
+
+**Question:** What can I do with auxiliary content?
+
+**Answer (via MCP):**
+
+Based on the GPAC test suite, here's what you can do with auxiliary content:
+
+### Auxiliary Video Tracks
+- **Add alpha channels**: Use auxiliary tracks to add alpha (transparency) information to videos
+- **MP4 files**: `MP4Box -add video.ivf:hdlr=auxv:alpha -new output.mp4`
+- **HEIF images**: `MP4Box -add-image video.ivf:hdlr=auxv:alpha -new output.heif`
+
+The auxiliary content functionality in GPAC allows you to:
+
+1. **Alpha channel support**: Add transparency data as auxiliary tracks
+2. **Multi-format support**: Works with both video files (MP4) and image containers (HEIF)  
+3. **Flexible input**: Accept various video formats (like AV1 in IVF containers) as auxiliary data
+
+The `hdlr=auxv:alpha` parameter specifies that the auxiliary track contains alpha channel information for transparency effects.
+
+## Question: AVC Stream Export
+
+**Question:** How can an AVC stream contained in an MP4 be exported to a raw bitstream?
+
+**Answer (via MCP):**
+
+To export an AVC stream from an MP4 file to a raw bitstream, use this command:
+
+```bash
+MP4Box -raw 1 input.mp4 -out output.avc
+```
+
+**Explanation:**
+- `-raw 1`: Extracts track 1 (usually the video track) in raw format
+- `input.mp4`: Source MP4 file containing the AVC stream
+- `-out output.avc`: Output file for the raw AVC bitstream
+
+**Alternative approaches:**
+- Extract specific track by ID: `MP4Box -raw <track_id> input.mp4`
+- Extract without output file (default naming): `MP4Box -raw 1 input.mp4`
+
+The exported `.avc` file will contain the raw H.264/AVC bitstream that can be played by any AVC-compatible decoder or re-imported into other containers.

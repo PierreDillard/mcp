@@ -6,7 +6,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { loadXmlTests, listXmlTests, getXmlTest, buildDryRunScript } from "./utils/xml-tests.js";
 import { loadScripts, readScriptSegment } from "./utils/scripts-index.js";
 
-const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_desriptions.xml";
+const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_descriptions.xml";
 const SCRIPTS_DIR = process.env.SCRIPTS_DIR || "./scripts";
 
 const server = new McpServer({ name: "testsuite-mcp", version: "0.1.0" });
@@ -50,7 +50,9 @@ function buildInMemoryIndex() {
         testName: xmlTest.name,
         subtestName: xmlSubtest.name,
         description: xmlSubtest.desc ?? "",
-        keywords: Array.isArray(xmlTest.keywords) ? xmlTest.keywords : [], // reusing for now
+        keywords: Array.isArray(xmlSubtest.keywords) && xmlSubtest.keywords.length
+          ? xmlSubtest.keywords
+          : (Array.isArray(xmlTest.keywords) ? xmlTest.keywords : []),
         command: xmlSubtest.command
       }))
     };
@@ -70,7 +72,13 @@ function clamp(n: number, min: number, max: number) {
   return Math.max(min, Math.min(max, n));
 }
 
-function normalize(s: string) { return s.toLowerCase(); }
+function normalize(s: string) {
+  return s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, ""); // strip accents
+}
+
 
 
 /** Enhanced scoring with multi-keyword support and relevance weighting */
@@ -108,16 +116,16 @@ function scoreTest(test: IndexedTest, keywords: string[]): number {
 }
 
 /** Lightweight summaries (without Command) to avoid massive payloads */
-function toTestSummaries(rows: IndexedTest[], includeSubtests = true) {
-  return rows.map(t => ({
-    name: t.name,
-    desc: (t.description ?? "").slice(0, MAX_DESC_CHARS),
-    keywords: t.keywords,
-    subtestCount: t.subtests.length,
+function toTestSummaries(testRows: IndexedTest[], includeSubtests = true) {
+  return testRows.map(testData => ({
+    name: testData.name,
+    desc: (testData.description ?? "").slice(0, MAX_DESC_CHARS),
+    keywords: testData.keywords,
+    subtestCount: testData.subtests.length,
     subtests: includeSubtests
-      ? t.subtests.map(st => ({
-          name: st.subtestName,
-          desc: (st.description ?? "").slice(0, MAX_DESC_CHARS)
+      ? testData.subtests.map(subtest => ({
+          name: subtest.subtestName,
+          desc: (subtest.description ?? "").slice(0, MAX_DESC_CHARS)
           // no command here (we get it via get_xml_test)
         }))
       : undefined
@@ -127,12 +135,12 @@ function toTestSummaries(rows: IndexedTest[], includeSubtests = true) {
 // --- Tools ---
 server.tool(
   "find_tests_by_keywords",
-  "Search and filter GPAC functional tests from a structured XML catalog to find concrete usage examples. Ideal for answering 'How to do X with MP4Box/GPAC?' questions. Searches through test names, keywords, descriptions, and subtests to find the most relevant matches. Returns a relevance-sorted list of tests with descriptions and exact commands.",
-  { 
-    keywords: z.array(z.string()).min(1).describe("List of keywords or technical terms for the search. Use precise terms like 'DASH', 'encrypt', 'CENC', 'BIFS', 'import', 'AAC' for better results. Providing multiple keywords refines the search."),
-    limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe("Maximum number of tests to return. Optional, defaults to 10."),
-    offset: z.number().int().min(0).optional().describe("Starting index for pagination. Optional, defaults to 0."),
-    include_subtests: z.boolean().optional().describe("Whether to include subtest details in results. Optional, defaults to true.")
+  "Search GPAC tests by keywords",
+  {
+    keywords: z.array(z.string()).min(1).describe("List of search terms"),
+    limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe("Maximum number of tests to return"),
+    offset: z.number().int().min(0).optional().describe("Starting index for pagination"),
+    include_subtests: z.boolean().optional().describe("Include subtest details")
   },
   async ({ keywords, limit = DEFAULT_LIMIT, offset = 0, include_subtests = true }) => {
     // Filter out empty keywords and normalize
@@ -179,9 +187,9 @@ server.tool(
 server.tool(
   "list_xml_tests",
   {
-    limit: z.number().int().min(1).max(MAX_LIMIT).optional(),
-    offset: z.number().int().min(0).optional(),
-    include_subtests: z.boolean().optional()
+    limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe("Maximum number of tests to return"),
+    offset: z.number().int().min(0).optional().describe("Starting index for pagination"),
+    include_subtests: z.boolean().optional().describe("Include subtest details")
   },
   async ({ limit = DEFAULT_LIMIT, offset = 0, include_subtests = false }) => {
     const allTests = Array.from(testByName.values());
@@ -204,19 +212,24 @@ server.tool(
 
 server.tool(
   "get_xml_test",
-  { name: z.string() },
+  "Get complete XML test details",
+  {
+    name: z.string().describe("Test name to retrieve")
+  },
   async ({ name }) => {
-    const t = getXmlTest(name);
-    if (!t) throw new Error(`Unknown XML test: ${name}`);
+    const testData = getXmlTest(name);
+    if (!testData) throw new Error(`Unknown XML test: ${name}`);
     return {
-      content: [{ type: "text", text: JSON.stringify(t, null, 2) }]
+      content: [{ type: "text", text: JSON.stringify(testData, null, 2) }]
     };
   }
 );
 
 server.tool(
   "dry_run_xml_test",
-  { name: z.string() },
+  {
+    name: z.string().describe("Test name for dry-run script")
+  },
   async ({ name }) => ({
     content: [{ type: "text", text: buildDryRunScript(name) }]
   })
@@ -232,7 +245,11 @@ server.tool(
 
 server.tool(
   "read_script",
-  { path: z.string(), start_line: z.number().int().min(1), end_line: z.number().int().min(1) },
+  {
+    path: z.string().describe("Script file path"),
+    start_line: z.number().int().min(1).describe("Starting line number"),
+    end_line: z.number().int().min(1).describe("Ending line number")
+  },
   async ({ path, start_line, end_line }) => ({
     content: [{ type: "text", text: await readScriptSegment(path, start_line, end_line) }]
   })
@@ -245,8 +262,8 @@ const FIND_MAX_DESC_CHARS = 180;
 server.tool(
   "find_commands_by_goal",
   {
-    goal: z.string().min(2),
-    limit: z.number().int().min(1).max(10).optional()
+    goal: z.string().min(2).describe("Goal to find commands for"),
+    limit: z.number().int().min(1).max(10).optional().describe("Maximum number of commands to return")
   },
   async ({ goal, limit }) => {
     const query = goal.toLowerCase();
@@ -294,11 +311,11 @@ server.tool(
       })
       .slice(0, lim);
 
-    const items = top.map(c => ({
-      title: `${c.test}#${c.subtest}`,
-      description: (c.desc || "").slice(0, FIND_MAX_DESC_CHARS),
-      command: c.command,
-      confidence: c.score > 5 ? "high" : "medium"
+    const items = top.map(commandItem => ({
+      title: `${commandItem.test}#${commandItem.subtest}`,
+      description: (commandItem.desc || "").slice(0, FIND_MAX_DESC_CHARS),
+      command: commandItem.command,
+      confidence: commandItem.score > 5 ? "high" : "medium"
     }));
 
     const hint = items.length > 0

@@ -1,8 +1,14 @@
 import fs from "fs/promises";
 import { XMLParser } from "fast-xml-parser";
 
-export type XmlSubtest = { name: string; desc?: string; command: string };
+export type XmlSubtest = { name: string; desc?: string; command: string; keywords?: string[] };
 export type XmlTest = { name: string; desc?: string; keywords?: string[]; subtests: XmlSubtest[] };
+
+export interface EnrichedXmlTest extends XmlTest {
+  enrichedKeywords: string[];
+  fullDescription: string;
+  subtestSummary: string;
+}
 
 let TESTS: Record<string, XmlTest> = {};
 
@@ -20,11 +26,17 @@ export async function loadXmlTests(xmlPath: string) {
     const keywords = String(t?.["@_keywords"] ?? t?.keywords ?? "")
       .split(/\s+/).filter(Boolean);
     const subs = Array.isArray(t?.Subtest) ? t.Subtest : (t?.Subtests?.Subtest ?? []);
-    const subtests: XmlSubtest[] = subs.map((s: any) => ({
-      name: s?.["@_name"] ?? s?.name ?? "sub",
-      desc: s?.["@_desc"] ?? s?.desc,
-      command: s?.Command ?? s?.command ?? ""
-    })).filter((x: XmlSubtest) => x.command);
+    const subtests: XmlSubtest[] = subs.map((s: any) => {
+      const command = s?.Command ?? s?.command ?? "";
+      const sKeywords = String(s?.["@_keywords"] ?? s?.keywords ?? "")
+        .split(/\s+/).filter(Boolean);
+      return {
+        name: s?.["@_name"] ?? s?.name ?? "sub",
+        desc: s?.["@_desc"] ?? s?.desc,
+        command: typeof command === 'string' ? command : String(command || ""),
+        keywords: sKeywords
+      };
+    }).filter((x: XmlSubtest) => x.command);
     TESTS[name] = { name, desc, keywords, subtests };
   }
   return Object.keys(TESTS).length;
@@ -66,7 +78,86 @@ export function listXmlTests(keywords?: string[] | string) {
   
   return results.sort((a, b) => a.name.localeCompare(b.name));
 }
-export function getXmlTest(name: string) { return TESTS[name] ?? null; }
+export function getXmlTest(name: string): EnrichedXmlTest | null {
+  const basicTest = TESTS[name] ?? null;
+  if (!basicTest) {
+    return null;
+  }
+
+  const enrichedKeywords = new Set<string>();
+  const descriptions: string[] = [];
+
+  // Add keywords from the main test
+  if (basicTest.keywords && Array.isArray(basicTest.keywords)) {
+    basicTest.keywords.forEach(kw => enrichedKeywords.add(kw.toLowerCase()));
+  }
+
+  // Add main test description if it exists
+  if (basicTest.desc) {
+    descriptions.push(basicTest.desc);
+    // Extract implicit keywords from main description
+    const wordsInDesc = basicTest.desc.match(/\b(\w+)\b/g);
+    if (wordsInDesc) {
+      wordsInDesc.forEach(word => {
+        if (word.length > 2 && isNaN(parseInt(word))) {
+          enrichedKeywords.add(word.toLowerCase());
+        }
+      });
+    }
+  }
+
+  // Process subtests to aggregate their information
+  const subtestDescriptions: string[] = [];
+  if (basicTest.subtests && Array.isArray(basicTest.subtests)) {
+    basicTest.subtests.forEach(subtest => {
+      // Extract keywords from subtest name
+      if (subtest.name) {
+        const wordsInName = subtest.name.match(/\b(\w+)\b/g);
+        if (wordsInName) {
+          wordsInName.forEach(word => {
+            if (word.length > 2 && isNaN(parseInt(word))) {
+              enrichedKeywords.add(word.toLowerCase());
+            }
+          });
+        }
+      }
+
+      // Extract keywords from subtest description
+      if (subtest.desc) {
+        subtestDescriptions.push(subtest.desc);
+        const wordsInDesc = subtest.desc.match(/\b(\w+)\b/g);
+        if (wordsInDesc) {
+          wordsInDesc.forEach(word => {
+            if (word.length > 2 && isNaN(parseInt(word))) {
+              enrichedKeywords.add(word.toLowerCase());
+            }
+          });
+        }
+      }
+
+      // Extract keywords from command (technical terms)
+      if (subtest.command && typeof subtest.command === 'string') {
+        // Look for common technical patterns in GPAC/MP4Box commands
+        const technicalTerms = subtest.command.match(/(?:^|\s)(-\w+|:\w+|\w+:\w+|[A-Z]{2,}|\w+(?:_\w+)+)/g);
+        if (technicalTerms) {
+          technicalTerms.forEach(term => {
+            const cleanTerm = term.trim().toLowerCase();
+            if (cleanTerm.length > 1) {
+              enrichedKeywords.add(cleanTerm);
+            }
+          });
+        }
+      }
+    });
+  }
+
+  return {
+    ...basicTest,
+    enrichedKeywords: Array.from(enrichedKeywords),
+    fullDescription: descriptions.join(' '),
+    subtestSummary: subtestDescriptions.join('; ')
+  };
+}
 
 export function buildDryRunScript(name: string) {
   const t = getXmlTest(name);
@@ -81,10 +172,15 @@ export function buildDryRunScript(name: string) {
   out.push(`mkdir -p "$TEMP_DIR"\n`);
   t.subtests.forEach((s, i) => {
     out.push(`# Subtest ${i+1}: ${s.name}${s.desc ? " — " + s.desc : ""}`);
+    if (!s.command) {
+      out.push("# No command available");
+      out.push("");
+      return;
+    }
     const cmd = String(s.command)
-  .replace(/\bout\//g, `"$TEMP_DIR"/`)
-  .replace(/\bMP4Box\b/g, `"${process.env.MP4BOX || 'MP4Box'}"`)
-  .replace(/\bgpac\b/g, `"${process.env.GPAC || 'gpac'}"`);
+      .replace(/\bout\//g, `"$TEMP_DIR"/`)
+      .replace(/\bMP4Box\b/g, `"${process.env.MP4BOX || 'MP4Box'}"`)
+      .replace(/\bgpac\b/g, `"${process.env.GPAC || 'gpac'}"`);
 
     out.push(cmd);
     out.push("");
