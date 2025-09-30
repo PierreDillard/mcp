@@ -25,7 +25,7 @@ This MCP server transforms GPAC's extensive test suite (8,600+ test scripts) int
 
 ```bash
 git clone <repository-url>
-cd testsuite-mcp
+cd mcp
 pnpm install
 pnpm run build
 ```
@@ -43,10 +43,10 @@ Add this MCP server to your Claude Desktop configuration file:
   "mcpServers": {
     "gpac-testsuite": {
       "command": "node",
-      "args": ["/absolute/path/to/testsuite-mcp/dist/src/index.js"],
+      "args": ["/absolute/path/to/mcp/dist/src/index.js"],
       "env": {
-        "XML_TESTS_PATH": "/absolute/path/to/testsuite-mcp/all_tests_desriptions.xml",
-        "SCRIPTS_DIR": "/absolute/path/to/testsuite-mcp/scripts"
+        "XML_TESTS_PATH": "/absolute/path/to/mcp/all_tests_desriptions.xml",
+        "SCRIPTS_DIR": "/absolute/path/to/mcp/scripts"
       }
     }
   }
