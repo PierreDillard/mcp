@@ -138,7 +138,7 @@ function toTestSummaries(testRows: IndexedTest[], includeSubtests = true) {
 // --- Tools ---
 server.registerTool("find_tests_by_keywords", {
   title: "Find GPAC tests by keywords",
-  description: "Search GPAC tests by keywords",
+  description: "Search GPAC tests by keywords. ONLY return indexed results. DO NOT invent or suggest commands if no results are found.",
   inputSchema: {
     keywords: z.array(z.string()).min(1).describe("List of search terms"),
     limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe("Maximum number of tests to return"),
@@ -188,18 +188,20 @@ server.registerTool("find_tests_by_keywords", {
   }
 );
 
-server.tool(
-  "list_xml_tests",
-  {
+server.registerTool("list_xml_tests", {
+  title: "List all GPAC tests",
+  description: "List all available GPAC tests with pagination support",
+  inputSchema: {
     limit: z.number().int().min(1).max(MAX_LIMIT).optional().describe("Maximum number of tests to return"),
     offset: z.number().int().min(0).optional().describe("Starting index for pagination"),
     include_subtests: z.boolean().optional().describe("Include subtest details")
-  },
+  }
+},
   async ({ limit = DEFAULT_LIMIT, offset = 0, include_subtests = false }) => {
     const allTests = Array.from(testByName.values());
     const total = allTests.length;
     const paginatedTests = allTests.slice(offset, offset + limit);
-    
+
     const result = {
       total,
       offset,
@@ -241,7 +243,15 @@ const FIND_MAX_DESC_CHARS = 180;
 
 server.registerTool("find_commands_by_goal", {
   title: "Find GPAC commands by goal",
-  description: "Find commands that accomplish a specific goal",
+  description: [
+    "Searches the GPAC Test Suite index and returns ONLY commands that exist in the index.",
+    "If no commands are found, this tool MUST return a structured error (isError=true) and MUST NOT propose alternatives.",
+    "Typical failure text: NO_MATCH. The host SHOULD surface this verbatim to the user.",
+    "",
+    "Usage notes:",
+    "• Keep queries concrete (e.g., 'dash live cmaf', 'extract CC to VTT').",
+    "• This tool never executes commands; it only retrieves indexed lines."
+  ].join("\n"),
   inputSchema: {
     goal: z.string().min(2).describe("Goal to find commands for"),
     limit: z.number().int().min(1).max(10).optional().describe("Maximum number of commands to return")
