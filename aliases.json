@@ -1,0 +1,1644 @@
+{
+  "3D-HEVC": [
+    "hevc"
+  ],
+  "aac_sbr": [
+    "misc",
+    "aac",
+    "sbr",
+    "import",
+    "dash",
+    "sbrx",
+    "ps",
+    "psx",
+    "sbr+ps",
+    "sbr+psx",
+    "sbrx+ps",
+    "sbrx+psx"
+  ],
+  "aout": [
+    "misc",
+    "audio",
+    "sdl",
+    "play"
+  ],
+  "audelim": [
+    "misc",
+    "avc",
+    "au",
+    "delim",
+    "import",
+    "create",
+    "mp4",
+    "export",
+    "dump",
+    "delimiter",
+    "audelim",
+    "inband",
+    "parameterset",
+    "xpsinband",
+    "hevc"
+  ],
+  "audio_sample_entry": [
+    "misc",
+    "ase",
+    "v0",
+    "bs",
+    "aac",
+    "sampleentry",
+    "import",
+    "2",
+    "v1",
+    "qt",
+    "quicktime"
+  ],
+  "auxv": [
+    "misc",
+    "auxv",
+    "alpha",
+    "import",
+    "track",
+    "heif",
+    "image"
+  ],
+  "avmix": [
+    "misc",
+    "avmix",
+    "audio",
+    "only",
+    "mixing",
+    "font",
+    "inspect",
+    "run",
+    "clip",
+    "frame",
+    "alloc",
+    "copy",
+    "forward",
+    "group",
+    "cam",
+    "offscreen",
+    "mask",
+    "mix",
+    "opacity",
+    "ref",
+    "seq",
+    "live",
+    "port",
+    "abort",
+    "ka",
+    "deadlock",
+    "start",
+    "path",
+    "js",
+    "pl",
+    "reload",
+    "scene",
+    "timer",
+    "any",
+    "pipe",
+    "raw",
+    "tcp",
+    "script",
+    "av",
+    "simple",
+    "swipe",
+    "xfade",
+    "replace",
+    "a",
+    "v",
+    "persp",
+    "wide",
+    "gpu",
+    "render",
+    "rgb",
+    "s32",
+    "flt",
+    "dbl"
+  ],
+  "bifs_all": [
+    "bifs",
+    "scene",
+    "all",
+    "bt",
+    "mp4",
+    "decode",
+    "mp42bt",
+    "xmt",
+    "mp42xmt",
+    "bt2xmt",
+    "rgb",
+    "mixing",
+    "font",
+    "srcplay",
+    "mp4play",
+    "statistics",
+    "stat",
+    "stats",
+    "hint",
+    "rtp",
+    "mp4hint",
+    "rap",
+    "mp4sync",
+    "mp4shadow",
+    "utf16",
+    "xmt2bt",
+    "isom",
+    "diso",
+    "chunk",
+    "encode",
+    "isomod",
+    "avc",
+    "isma",
+    "make",
+    "dump"
+  ],
+  "bifs_live": [
+    "bifs",
+    "scene",
+    "live",
+    "rtp",
+    "bt"
+  ],
+  "bifs_subs": [
+    "bifs",
+    "scene",
+    "subs",
+    "bt",
+    "subtitle",
+    "bt2mp4",
+    "mp42bt",
+    "tx3g",
+    "strtxt"
+  ],
+  "boxpatch": [
+    "misc",
+    "gpac",
+    "patch",
+    "box",
+    "avc",
+    "add",
+    "root",
+    "inline",
+    "heif",
+    "item",
+    "prop",
+    "prop2",
+    "dash",
+    "frag"
+  ],
+  "bsrw": [
+    "misc",
+    "bsrw",
+    "sar",
+    "avc",
+    "bswr",
+    "hevc",
+    "m4v",
+    "profile",
+    "prof",
+    "nosei",
+    "sei",
+    "tc",
+    "insert",
+    "offset",
+    "timecode",
+    "remove",
+    "shift",
+    "neg",
+    "empty",
+    "constant",
+    "av1",
+    "prores",
+    "colorspace",
+    "vvc",
+    "whitelist",
+    "blacklist",
+    "single"
+  ],
+  "bssplit": [
+    "misc",
+    "bssplit",
+    "dv",
+    "rpu",
+    "split",
+    "dolbyvision",
+    "agg",
+    "svc",
+    "layers",
+    "layer",
+    "all",
+    "cust",
+    "alltid",
+    "shvc",
+    "l-hevc",
+    "vvc",
+    "passthrough",
+    "inspect",
+    "single",
+    "bsagg"
+  ],
+  "bt": [
+    "misc",
+    "bt",
+    "2d",
+    "background",
+    "background2d",
+    "bind",
+    "mixing",
+    "rgb",
+    "pcm",
+    "image",
+    "layer2d",
+    "movie",
+    "url",
+    "change",
+    "interactivity",
+    "discsensor",
+    "keysensor",
+    "mousesensor",
+    "nested",
+    "sensors",
+    "planesensor2d",
+    "proximitysensor2d",
+    "stringsensor",
+    "touchsensor",
+    "4states",
+    "hitpoint",
+    "isactive",
+    "exposedfield",
+    "isover",
+    "move",
+    "over",
+    "painting",
+    "colortransform",
+    "alpha",
+    "bitmap",
+    "color",
+    "texture",
+    "lineproperties",
+    "material2d",
+    "xlineproperties",
+    "cap",
+    "compositetexture2d",
+    "dash",
+    "imagetexture",
+    "join",
+    "lineargradient",
+    "radialgradient",
+    "scalable",
+    "transparent",
+    "positioning",
+    "clipper2d",
+    "form",
+    "align",
+    "center",
+    "horiz",
+    "vert",
+    "spread",
+    "in",
+    "layout",
+    "ltr",
+    "nowrap",
+    "wrap",
+    "btt",
+    "ttb",
+    "rtl",
+    "text",
+    "scroll",
+    "child",
+    "full",
+    "modes",
+    "on",
+    "off",
+    "orderedgroup",
+    "pathlayout",
+    "graphics",
+    "transform2d",
+    "transformmatrix2d",
+    "shapes",
+    "indexfaceset2d",
+    "indexlineset2d",
+    "pointset2d",
+    "xcurve2d",
+    "texturing",
+    "gradients",
+    "simple",
+    "movietexture",
+    "pixeltexture",
+    "texturetransform",
+    "base",
+    "interact",
+    "viewport",
+    "complete",
+    "3d",
+    "images",
+    "collision",
+    "proxy",
+    "cylindersensor",
+    "planesensor",
+    "proximitysensor",
+    "spheresensor",
+    "visibilitysensor",
+    "lighting",
+    "directionallight",
+    "fog",
+    "pointlight",
+    "spotlight",
+    "billboard",
+    "viewer",
+    "alignment",
+    "gravity",
+    "layer3d",
+    "views",
+    "lod",
+    "transform",
+    "box",
+    "cone",
+    "cylinder",
+    "elevationgrid",
+    "extrusion",
+    "indexedfaceset",
+    "indexedlineset",
+    "nonlineardeformer",
+    "pointset",
+    "video",
+    "compositetexture3d",
+    "matrix",
+    "viewpoint",
+    "anim",
+    "jump",
+    "ortho",
+    "meter",
+    "metrics",
+    "pixel",
+    "resizing",
+    "materialkey",
+    "cachetexture",
+    "cache",
+    "nocache",
+    "command",
+    "animated",
+    "osmo4logo",
+    "environmenttest",
+    "externproto",
+    "forestgump",
+    "mfurl",
+    "nood",
+    "game",
+    "arrange",
+    "breakout",
+    "bubble",
+    "minesweeper",
+    "othello",
+    "interpolation",
+    "colorinterpolator",
+    "coordinateinterpolator2d",
+    "others",
+    "positionanimator",
+    "positionanimator2d",
+    "lines",
+    "positioninterpolator",
+    "position",
+    "size",
+    "positioninterpolator2d",
+    "scalaranimator",
+    "scalarinterpolator",
+    "timesensor",
+    "enabled",
+    "starttime",
+    "norestart",
+    "restart",
+    "valuator",
+    "sftime",
+    "isom",
+    "keynavigator",
+    "linking",
+    "anchor",
+    "mp4",
+    "next",
+    "prev",
+    "www",
+    "inline",
+    "direct",
+    "http",
+    "no",
+    "od",
+    "segment",
+    "media",
+    "audiobuffer",
+    "audioclip",
+    "urlchanged",
+    "audiosource",
+    "object",
+    "scale",
+    "reuse",
+    "control",
+    "joinsession",
+    "leave",
+    "session",
+    "owns",
+    "ocr",
+    "shares",
+    "sound",
+    "spatialize",
+    "cyclic",
+    "graph",
+    "hc",
+    "proto",
+    "depthgroup",
+    "events",
+    "offscreengroup",
+    "pathextrusion",
+    "planarextrusion",
+    "planeclipper",
+    "non",
+    "linear",
+    "parsing",
+    "conditional",
+    "use",
+    "srt",
+    "import",
+    "3gpp",
+    "share",
+    "sub",
+    "utf16",
+    "input",
+    "language",
+    "code",
+    "remove",
+    "esd",
+    "update",
+    "delete",
+    "def",
+    "index",
+    "multiple",
+    "route",
+    "protocode",
+    "protointerface",
+    "remoteiod",
+    "script",
+    "char",
+    "to",
+    "int",
+    "create",
+    "date",
+    "event",
+    "out",
+    "initialize",
+    "load",
+    "node",
+    "access",
+    "timestamp",
+    "storage",
+    "stream",
+    "switch",
+    "horiz1",
+    "horiz2",
+    "horiz3",
+    "horiz4",
+    "vert1",
+    "vert2",
+    "vert3",
+    "vert4",
+    "glyph",
+    "advance",
+    "length",
+    "maxextend",
+    "style",
+    "unicode",
+    "vrml",
+    "timeline",
+    "mediacontrol",
+    "audio",
+    "speed",
+    "deactivation",
+    "av",
+    "segments",
+    "videospeed",
+    "mediasensor",
+    "counter",
+    "auto",
+    "js"
+  ],
+  "cc708": [
+    "subtitles",
+    "cc",
+    "avc",
+    "closedcaption",
+    "vtt",
+    "subtitle",
+    "ttml",
+    "inspect",
+    "word",
+    "m2v",
+    "mpeg-2"
+  ],
+  "charset": [
+    "misc",
+    "charset",
+    "日本語のタイトル.audioonly.mp4",
+    "utf",
+    "openwrite",
+    "edit"
+  ],
+  "cmaf": [
+    "dash",
+    "cmaf",
+    "cmfc",
+    "import",
+    "input",
+    "preparation",
+    "cmf2",
+    "ttml"
+  ],
+  "compositor_modes": [
+    "render",
+    "compositor",
+    "nogl",
+    "bt",
+    "2d",
+    "background",
+    "background2d",
+    "bind",
+    "mixing",
+    "rgb",
+    "opengl",
+    "play",
+    "image",
+    "layer2d",
+    "interactivity",
+    "nested",
+    "sensors",
+    "painting",
+    "lineproperties",
+    "material2d",
+    "xlineproperties",
+    "cap",
+    "compositetexture2d",
+    "imagetexture",
+    "lineargradient",
+    "positioning",
+    "form",
+    "align",
+    "center",
+    "in",
+    "layout",
+    "horiz",
+    "ltr",
+    "nowrap",
+    "shapes",
+    "all",
+    "pointset2d",
+    "texturing",
+    "bitmap",
+    "transparent",
+    "gradients",
+    "viewport",
+    "complete",
+    "3d",
+    "layer3d",
+    "meter",
+    "metrics",
+    "pixel",
+    "misc",
+    "hc",
+    "proto",
+    "offscreengroup",
+    "glonly",
+    "hyb",
+    "immediate",
+    "interpolation",
+    "positioninterpolator2d",
+    "position",
+    "defer",
+    "debug",
+    "svgopacity",
+    "opacity",
+    "svg",
+    "gl",
+    "rect",
+    "01",
+    "t",
+    "noshader",
+    "lighting",
+    "fog",
+    "tx",
+    "stereo",
+    "norms",
+    "strike",
+    "text",
+    "length",
+    "texture",
+    "gltexout",
+    "single"
+  ],
+  "compressed_boxes": [
+    "misc",
+    "comp",
+    "box",
+    "compress",
+    "inspect",
+    "read",
+    "dash"
+  ],
+  "dash": [
+    "dash",
+    "basic",
+    "import",
+    "input",
+    "preparation",
+    "mpd",
+    "inspect"
+  ],
+  "dash-cenc": [
+    "dash",
+    "encryption",
+    "cenc",
+    "import",
+    "input",
+    "playready",
+    "encrypt",
+    "profile",
+    "dashing",
+    "inspect",
+    "pssh",
+    "mpd",
+    "cploc"
+  ],
+  "dash-chain": [
+    "dash",
+    "chain",
+    "import",
+    "input1",
+    "1",
+    "2",
+    "inspect"
+  ],
+  "dash-clone": [
+    "dash",
+    "clone",
+    "cmaf",
+    "mabr",
+    "route",
+    "hls",
+    "http",
+    "raw"
+  ],
+  "dash_cues": [
+    "dash",
+    "metadata",
+    "id3",
+    "counter",
+    "cues",
+    "cts",
+    "broken",
+    "edits",
+    "cue",
+    "dts",
+    "pres",
+    "time",
+    "sn",
+    "negctts"
+  ],
+  "dash-descriptor": [
+    "dash",
+    "descriptor",
+    "import",
+    "input",
+    "preparation",
+    "desc",
+    "rep",
+    "as",
+    "same",
+    "c",
+    "p"
+  ],
+  "dash-dvb": [
+    "dash",
+    "dvb",
+    "import",
+    "input",
+    "preparation",
+    "profile",
+    "if",
+    "live",
+    "inspect"
+  ],
+  "dash-dynamic": [
+    "dash",
+    "dynamic",
+    "simple",
+    "gen",
+    "inspect",
+    "loop",
+    "dur",
+    "less",
+    "than",
+    "seg",
+    "greater",
+    "noloop",
+    "period"
+  ],
+  "dash-dynamic-utc": [
+    "dash",
+    "dynamic",
+    "utc",
+    "gen",
+    "inspect"
+  ],
+  "dash-dynauto": [
+    "dash",
+    "dynauto",
+    "gen"
+  ],
+  "dash-encode": [
+    "dash",
+    "encode",
+    "single",
+    "v",
+    "inspect",
+    "a",
+    "vv",
+    "avv",
+    "mp4box",
+    "multi",
+    "aac",
+    "mperiod",
+    "mkpcm",
+    "pcont",
+    "reprime",
+    "avc",
+    "pdisc",
+    "splice"
+  ],
+  "dash_exotic": [
+    "dash",
+    "exotic",
+    "raw",
+    "live",
+    "inspect",
+    "ondemand",
+    "main",
+    "files",
+    "byteranges",
+    "nomux",
+    "isobmf",
+    "mime",
+    "ogg",
+    "sync",
+    "hls",
+    "gen",
+    "br",
+    "ts",
+    "m2ts",
+    "mkv"
+  ],
+  "dash_forward": [
+    "dash",
+    "fwd",
+    "mpd",
+    "twores",
+    "encryption",
+    "cue",
+    "encrypt",
+    "mani",
+    "inspect",
+    "segb",
+    "hls",
+    "oneres",
+    "merge",
+    "mperiod",
+    "dash1",
+    "dash2",
+    "remerge"
+  ],
+  "dash-gen": [
+    "dash"
+  ],
+  "dash-genmanifest": [
+    "dash",
+    "gen",
+    "manifest",
+    "import",
+    "ondemand",
+    "main",
+    "hls",
+    "live"
+  ],
+  "dash-if-live": [
+    "dash",
+    "if",
+    "live",
+    "import",
+    "input",
+    "preparation",
+    "inspect"
+  ],
+  "dash-if-ondemand": [
+    "dash",
+    "if",
+    "ondemand",
+    "import",
+    "input",
+    "preparation",
+    "basic",
+    "inspect"
+  ],
+  "dash-live": [
+    "dash",
+    "live",
+    "import",
+    "input",
+    "preparation",
+    "inspect",
+    "seg",
+    "info"
+  ],
+  "dash-live-generation": [
+    "dash",
+    "live",
+    "generation",
+    "import",
+    "input",
+    "preparation",
+    "gen",
+    "segtime",
+    "live1",
+    "live2",
+    "live3"
+  ],
+  "dash-main": [
+    "dash",
+    "mainprofile",
+    "import",
+    "input",
+    "preparation",
+    "inspect"
+  ],
+  "dash-main-singlefile": [
+    "dash",
+    "mainprofile",
+    "singlefile",
+    "import",
+    "input",
+    "preparation",
+    "1",
+    "inspect"
+  ],
+  "dash-media-input-dur": [
+    "dash",
+    "input",
+    "dur",
+    "import",
+    "preparation",
+    "inspect"
+  ],
+  "dash-multiperiod": [
+    "dash",
+    "multiperiod",
+    "import",
+    "input",
+    "preparation",
+    "180",
+    "audio",
+    "inspect"
+  ],
+  "dash-multi-stsd": [
+    "dash",
+    "multi",
+    "stsd",
+    "import",
+    "input",
+    "inspect"
+  ],
+  "dash-mux-ondemand": [
+    "dash",
+    "muxing",
+    "mux",
+    "ondemand",
+    "import",
+    "input",
+    "preparation",
+    "basic",
+    "inspect"
+  ],
+  "dash_rawsubs": [
+    "dash",
+    "subtitles",
+    "rawsubs",
+    "vtt",
+    "1s",
+    "subtitle",
+    "4s",
+    "ttml"
+  ],
+  "dash-read": [
+    "dash",
+    "read",
+    "no",
+    "adapt",
+    "inspect",
+    "gbuf",
+    "grate",
+    "bba0",
+    "bolaf",
+    "bolab",
+    "bolau",
+    "bolao",
+    "abort",
+    "auto",
+    "bmin",
+    "xlink",
+    "seek",
+    "seek2",
+    "ondemand",
+    "live",
+    "timeline",
+    "hls",
+    "smooth",
+    "smoothstreaming",
+    "tfxd",
+    "nbs"
+  ],
+  "dash-sidx": [
+    "dash",
+    "dash-features",
+    "sidx",
+    "flat",
+    "hierarchical",
+    "daisy",
+    "one"
+  ],
+  "dash-splitset": [
+    "dash",
+    "splitset",
+    "inspect"
+  ],
+  "dash-srd-hevc": [
+    "dash",
+    "dash-features",
+    "hevc",
+    "srd",
+    "import",
+    "tile",
+    "input",
+    "preparation",
+    "basic",
+    "inspect",
+    "tiles",
+    "play",
+    "tileagg",
+    "dual",
+    "preparation1",
+    "preparation2",
+    "playback",
+    "split",
+    "merge",
+    "vr"
+  ],
+  "dash-ssix": [
+    "dash",
+    "dash-features",
+    "ssix",
+    "import",
+    "input",
+    "preparation",
+    "ondemand",
+    "inspect"
+  ],
+  "dash-stl": [
+    "dash",
+    "subtitles",
+    "stl",
+    "tpl",
+    "dashing"
+  ],
+  "dash-subtitle": [
+    "dash",
+    "subtitles",
+    "subt",
+    "import",
+    "subtitle",
+    "input",
+    "preparation",
+    "inspect",
+    "subt2",
+    "subs"
+  ],
+  "dash-template": [
+    "dash",
+    "dash-features",
+    "template",
+    "bandwidth",
+    "time",
+    "import",
+    "input",
+    "preparation",
+    "inspect",
+    "repid",
+    "number",
+    "baseurl",
+    "global",
+    "path",
+    "rep",
+    "dir",
+    "nbs"
+  ],
+  "dash-text": [
+    "dash",
+    "text",
+    "empty",
+    "vtt",
+    "subtitle",
+    "inspect"
+  ],
+  "dash-timeline": [
+    "dash",
+    "dash-features",
+    "timeline",
+    "import",
+    "input",
+    "preparation",
+    "dash1",
+    "dash2"
+  ],
+  "dash-ts": [
+    "dash",
+    "ts",
+    "import",
+    "for",
+    "input",
+    "preparation",
+    "m2ts",
+    "single",
+    "file",
+    "inspect",
+    "multiple",
+    "mux",
+    "live",
+    "vod",
+    "sidx",
+    "split"
+  ],
+  "dash-unaligned": [
+    "dash",
+    "unalign"
+  ],
+  "dash-xlink": [
+    "dash",
+    "xlink",
+    "import",
+    "input",
+    "preparation",
+    "remote",
+    "inspect"
+  ],
+  "decoders": [
+    "misc",
+    "decoder",
+    "png",
+    "imgdec",
+    "decode",
+    "ffdec",
+    "jpg",
+    "bmp",
+    "aac",
+    "faad",
+    "mp3",
+    "maddec",
+    "wav",
+    "avc",
+    "ohevc",
+    "vtb",
+    "hevc",
+    "nocopy",
+    "av1",
+    "amr",
+    "amrwb",
+    "h263",
+    "qcp",
+    "m1v",
+    "j2k",
+    "oj2k",
+    "mjp2",
+    "ff",
+    "ac3",
+    "a52",
+    "vorbis",
+    "theora",
+    "mc",
+    "flac",
+    "switch",
+    "inspect"
+  ],
+  "decryption_selkey": [
+    "encryption",
+    "cenc",
+    "decryption",
+    "selkey",
+    "crypt1",
+    "crypt2",
+    "dash",
+    "inspect"
+  ],
+  "dims": [
+    "misc",
+    "dims",
+    "import",
+    "export",
+    "dimz"
+  ],
+  "dolby_vision": [
+    "hevc",
+    "dovi",
+    "cenc",
+    "dash",
+    "dolbyvision",
+    "import",
+    "set",
+    "profile",
+    "rem",
+    "dashing",
+    "dnal"
+  ],
+  "dump-ogg": [
+    "misc",
+    "oggdump",
+    "dead",
+    "ogg.ogg",
+    "import",
+    "add",
+    "export",
+    "dump",
+    "alsa",
+    "6ch.opus"
+  ],
+  "encoders": [
+    "misc"
+  ],
+  "encryption": [
+    "encryption",
+    "cenc"
+  ],
+  "encryption_exotic": [
+    "encryption",
+    "cenc"
+  ],
+  "encryption_import": [
+    "encryption",
+    "cenc"
+  ],
+  "encryption_segment": [
+    "encryption",
+    "cenc"
+  ],
+  "encryption_xps": [
+    "encryption",
+    "cenc"
+  ],
+  "evg": [
+    "misc"
+  ],
+  "evgs": [
+    "misc"
+  ],
+  "ffavf": [
+    "ffmpeg"
+  ],
+  "ffbsf": [
+    "ffmpeg"
+  ],
+  "ffdmx": [
+    "ffmpeg"
+  ],
+  "ffmx": [
+    "ffmpeg"
+  ],
+  "ffsws": [
+    "ffmpeg"
+  ],
+  "filelist": [
+    "utils"
+  ],
+  "frags-misc": [
+    "misc"
+  ],
+  "fuzz-base": [
+    "misc"
+  ],
+  "gf_fileio": [
+    "misc"
+  ],
+  "ghi": [
+    "misc"
+  ],
+  "gpac-gui": [
+    "misc"
+  ],
+  "gpac-units": [
+    "misc"
+  ],
+  "graphics_dump": [
+    "render",
+    "inspect"
+  ],
+  "gsf": [
+    "misc"
+  ],
+  "heif": [
+    "heif"
+  ],
+  "hevcsplit": [
+    "hevc"
+  ],
+  "hevc-tiles": [
+    "hevc"
+  ],
+  "hls": [
+    "hls"
+  ],
+  "hls-basic": [
+    "hls"
+  ],
+  "hls-gen": [
+    "hls"
+  ],
+  "hls-saes": [
+    "hls",
+    "encryption"
+  ],
+  "http": [
+    "http"
+  ],
+  "id3": [
+    "id3"
+  ],
+  "iff": [
+    "misc"
+  ],
+  "iff_crypt": [
+    "encryption",
+    "cenc"
+  ],
+  "iff-grid": [
+    "misc"
+  ],
+  "iff-misc": [
+    "misc"
+  ],
+  "iff-ranges": [
+    "misc"
+  ],
+  "iff-ref": [
+    "misc"
+  ],
+  "inspect_analyze": [
+    "inspect"
+  ],
+  "item": [
+    "misc"
+  ],
+  "items_pids": [
+    "misc"
+  ],
+  "jsfilter": [
+    "quickjs"
+  ],
+  "laser_all": [
+    "bifs",
+    "scene"
+  ],
+  "llhls": [
+    "hls"
+  ],
+  "mixed_stsd": [
+    "misc"
+  ],
+  "mp4box-3gp_isma": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-advanced": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-afx": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-base": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-boxpatch": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-cat": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-chap": [
+    "mp4box",
+    "isobmff",
+    "metadata"
+  ],
+  "mp4box-comp": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-dashrip": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-deps": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-dsap": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-edits": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-fullinter": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-gdr": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-inplace": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-io": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-kind": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-lang": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-lastsamp": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-misc": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-mux": [
+    "mp4box",
+    "isobmff",
+    "muxing"
+  ],
+  "mp4box-packnal": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-rescale": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-sar": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-sdp": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-split": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-storage": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-subtitle": [
+    "mp4box",
+    "isobmff",
+    "subtitles"
+  ],
+  "mp4box-tags": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-timecode": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-timescale": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-tsel": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-udta": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-vui": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mp4box-wgt": [
+    "mp4box",
+    "isobmff"
+  ],
+  "mpeg2ps": [
+    "mpeg-ps"
+  ],
+  "mpeg2ts": [
+    "mpeg-ts"
+  ],
+  "mpeg4on2": [
+    "misc"
+  ],
+  "mux_avi": [
+    "muxing"
+  ],
+  "negctts": [
+    "misc"
+  ],
+  "netcap": [
+    "utils"
+  ],
+  "nhml-comp": [
+    "misc"
+  ],
+  "nhml-subs": [
+    "misc"
+  ],
+  "nhnt": [
+    "misc"
+  ],
+  "node": [
+    "bindings"
+  ],
+  "no-frags-default": [
+    "misc"
+  ],
+  "out_http": [
+    "http"
+  ],
+  "pipe": [
+    "io"
+  ],
+  "pipe_flush": [
+    "io"
+  ],
+  "python": [
+    "bindings"
+  ],
+  "qt_prores": [
+    "quicktime"
+  ],
+  "qtvr": [
+    "quicktime"
+  ],
+  "range_extension": [
+    "misc"
+  ],
+  "raw-audio": [
+    "misc"
+  ],
+  "raw-video": [
+    "misc"
+  ],
+  "reframers": [
+    "muxing"
+  ],
+  "resample": [
+    "misc"
+  ],
+  "restamp": [
+    "misc"
+  ],
+  "rewind": [
+    "misc"
+  ],
+  "route": [
+    "mpeg-ts"
+  ],
+  "rtp": [
+    "rtp"
+  ],
+  "rtp_m2ts": [
+    "rtp"
+  ],
+  "rtsp": [
+    "rtsp"
+  ],
+  "scalable": [
+    "misc"
+  ],
+  "scte35": [
+    "misc"
+  ],
+  "skip_filter": [
+    "misc"
+  ],
+  "smooth": [
+    "misc"
+  ],
+  "socket": [
+    "io"
+  ],
+  "softstretch": [
+    "misc"
+  ],
+  "split": [
+    "misc"
+  ],
+  "svg": [
+    "vector-graphics"
+  ],
+  "swf": [
+    "vector-graphics"
+  ],
+  "temi": [
+    "misc"
+  ],
+  "test_prl": [
+    "misc"
+  ],
+  "texml": [
+    "misc"
+  ],
+  "thumbs": [
+    "render"
+  ],
+  "tilesplit": [
+    "misc"
+  ],
+  "tsmux": [
+    "mpeg-ts"
+  ],
+  "ttml": [
+    "subtitles"
+  ],
+  "ttxtdec": [
+    "subtitles"
+  ],
+  "txtconv": [
+    "subtitles"
+  ],
+  "txtgen": [
+    "subtitles"
+  ],
+  "uncv": [
+    "misc"
+  ],
+  "vflip": [
+    "misc"
+  ],
+  "vobsub": [
+    "subtitles"
+  ],
+  "vout": [
+    "render"
+  ],
+  "vtt-all": [
+    "subtitles"
+  ],
+  "vtt-merge": [
+    "subtitles"
+  ],
+  "webradio": [
+    "misc"
+  ],
+  "x3d": [
+    "bifs",
+    "scene",
+    "vector-graphics"
+  ],
+  "xmlbin": [
+    "misc"
+  ],
+  "xmlin": [
+    "misc"
+  ],
+  "xps_inband": [
+    "encryption",
+    "cenc"
+  ],
+  "yt3d": [
+    "misc"
+  ],
+  "yuv4mpeg": [
+    "raw"
+  ]
+}
