@@ -346,3 +346,177 @@ MP4Box -dash 1000 -rap psx.mp4 -out out/psx.mpd
 - `-rap` - Uses Random Access Points for segmentation
 
 This creates a DASH manifest with AAC Parametric Stereo explicit encoding.
+
+## Question: BT Scene Rendering with Audio Output
+
+**Question:** How can I produce a 44.1 kHz stereo PCM audio output while rendering a BT scene with GPAC?
+
+**Answer (via MCP):**
+
+To produce 44.1 kHz stereo PCM audio output while rendering a BT scene, use:
+
+```bash
+gpac -i scene.bt -o audio.pcm:sr=44100:ch=2
+```
+
+Or with the audio compositor options:
+
+```bash
+gpac -i scene.bt compositor:osr=44100:och=2 -o audio.pcm
+```
+
+**Key parameters:**
+- `sr=44100` or `osr=44100`: Output sample rate (44.1 kHz)
+- `ch=2` or `och=2`: Output channels (stereo)
+
+If you need to resample existing audio while rendering:
+
+```bash
+gpac -i scene.bt resample:osr=44100:och=2 -o audio.pcm
+```
+
+## Question: DASH Stream with 1-Second Segments
+
+**Question:** How do I create a DASH stream with 1-second segments?
+
+**Answer (via MCP):**
+
+The validated command is:
+
+```bash
+MP4Box -dash 1000 -out out/test.mpd input.hevc -profile main --muxtype=raw --sfile
+```
+
+This creates DASH with **1000ms (1 second) segments**. Key parameters:
+- `-dash 1000`: 1-second segment duration
+- `-profile main`: DASH main profile
+- `-out out/test.mpd`: Output manifest path
+- `input.hevc`: Your input video file
+
+For typical MP4 inputs (not raw bitstream), use:
+```bash
+MP4Box -dash 1000 -out manifest.mpd video.mp4
+```
+
+## Question: Add AAC Audio with SBR to MP4
+
+**Question:** How can I add AAC audio with SBR to an MP4 file?
+
+**Answer (via MCP):**
+
+To add AAC audio with SBR (Spectral Band Replication) to an MP4 file, use one of these commands:
+
+**SBR implicit mode:**
+```bash
+MP4Box -add audio.aac:sbr -new output.mp4
+```
+
+**SBR explicit mode:**
+```bash
+MP4Box -add audio.aac:sbrx -new output.mp4
+```
+
+**SBR + Parametric Stereo (both implicit):**
+```bash
+MP4Box -add audio.aac:sbr:ps -new output.mp4
+```
+
+**SBR + Parametric Stereo (SBR implicit, PS explicit):**
+```bash
+MP4Box -add audio.aac:sbr:psx -new output.mp4
+```
+
+**SBR explicit + Parametric Stereo implicit:**
+```bash
+MP4Box -add audio.aac:sbrx:ps -new output.mp4
+```
+
+**Key parameters:**
+- `:sbr` - Enables SBR implicit mode
+- `:sbrx` - Enables SBR explicit mode
+- `:ps` - Enables Parametric Stereo implicit mode
+- `:psx` - Enables Parametric Stereo explicit mode
+
+The `-new` flag creates a new MP4 file with the AAC+SBR audio track.
+
+## Question: Add Alpha Channel as Auxiliary Track
+
+**Question:** How can I add an alpha channel as an auxiliary track?
+
+**Answer (via MCP):**
+
+To add an alpha channel as an auxiliary track in GPAC:
+
+**For MP4 video files:**
+```bash
+MP4Box -add video.ivf:hdlr=auxv:alpha -new output.mp4
+```
+
+**For HEIF image files:**
+```bash
+MP4Box -add-image video.ivf:hdlr=auxv:alpha -new output.heif
+```
+
+**Key parameters:**
+- `:hdlr=auxv` - Sets handler type to auxiliary video
+- `:alpha` - Specifies this is alpha channel data
+- The input file (e.g., `.ivf` containing AV1 video) contains the alpha/transparency information
+
+This allows you to add transparency data as auxiliary tracks, supporting alpha channels in both video files (MP4) and image containers (HEIF).
+
+## Question: Force Stereo Channel Configuration When Adding AAC
+
+**Question:** How do I force stereo channel configuration when adding AAC?
+
+**Answer (via MCP):**
+
+To force stereo channel configuration when adding AAC to MP4, use the **`asemode`** option:
+
+**Force stereo (2 channels):**
+```bash
+MP4Box -add audio.aac:asemode=v0-2 -new output.mp4
+```
+
+**Available `asemode` values:**
+- `v0-bs`: Use MPEG AudioSampleEntry v0 with channel count from bitstream (default)
+- `v0-2`: Use MPEG AudioSampleEntry v0 and **force channel count to 2 (stereo)**
+- `v1`: Use MPEG AudioSampleEntry v1 with channel count from bitstream
+- `v1-qt`: Use QuickTime Sound Sample Description Version 1 with channel count from bitstream
+
+The `:asemode=v0-2` option forces the channel count to 2 (stereo) regardless of the actual channel configuration in the AAC bitstream.
+
+## Question: How do I play audio using SDL output in GPAC?
+
+**Question:** How do I play audio using SDL output in GPAC?
+
+**Answer (via MCP):**
+
+To play audio using SDL output in GPAC, use the `aout` filter with the SDL driver:
+
+```bash
+gpac -i input.mp4 aout:drv=SDL
+```
+
+**With additional parameters:**
+```bash
+# Set volume and buffer size
+gpac -i audio.mp4 aout:drv=SDL:vol=80:buffer=300
+
+# Adjust playback speed
+gpac -i audio.mp4 aout:drv=SDL:speed=1.5
+
+# Set stereo pan (0-100, 50 = centered)
+gpac -i audio.mp4 aout:drv=SDL:pan=30
+
+# Multiple parameters
+gpac -i audio.mp4 aout:drv=SDL:vol=80:buffer=200:speed=1.0:pan=50
+```
+
+**Key `aout` parameters:**
+- `drv=SDL`: Use SDL audio driver
+- `vol=100`: Volume percentage (0-100)
+- `buffer=200`: Playout buffer in ms
+- `speed=1.0`: Playback speed
+- `pan=50`: Stereo pan (0=left, 50=center, 100=right)
+- `bnum=2`: Number of audio buffers
+- `bdur=100`: Total duration of all buffers in ms

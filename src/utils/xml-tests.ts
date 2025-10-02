@@ -13,24 +13,24 @@ export async function loadXmlTests(xmlPath: string) {
 
   const tests = root?.TestSuiteDescription?.Test ?? root?.Tests ?? root?.test ?? [];
   TESTS = {};
-  for (const t of tests) {
-    const name = t?.["@_name"] ?? t?.name;
+  for (const test of tests) {
+    const name = test?.["@_name"] ?? test?.name;
     if (!name) continue;
-    const desc = t?.["@_desc"] ?? t?.desc;
-    const keywords = String(t?.["@_keywords"] ?? t?.keywords ?? "")
+    const desc = test?.["@_desc"] ?? test?.desc;
+    const keywords = String(test?.["@_keywords"] ?? test?.keywords ?? "")
       .split(/\s+/).filter(Boolean);
-    const subs = Array.isArray(t?.Subtest) ? t.Subtest : (t?.Subtests?.Subtest ?? []);
-    const subtests: XmlSubtest[] = subs.map((s: any) => {
-      const command = s?.Command ?? s?.command ?? "";
-      const sKeywords = String(s?.["@_keywords"] ?? s?.keywords ?? "")
+    const subs = Array.isArray(test?.Subtest) ? test.Subtest : (test?.Subtests?.Subtest ?? []);
+    const subtests: XmlSubtest[] = subs.map((subtest: any) => {
+      const command = subtest?.Command ?? subtest?.command ?? "";
+      const subtestKeywords = String(subtest?.["@_keywords"] ?? subtest?.keywords ?? "")
         .split(/\s+/).filter(Boolean);
       return {
-        name: s?.["@_name"] ?? s?.name ?? "sub",
-        desc: s?.["@_desc"] ?? s?.desc,
+        name: subtest?.["@_name"] ?? subtest?.name ?? "sub",
+        desc: subtest?.["@_desc"] ?? subtest?.desc,
         command: typeof command === 'string' ? command : String(command || ""),
-        keywords: sKeywords
+        keywords: subtestKeywords
       };
-    }).filter((x: XmlSubtest) => x.command);
+    }).filter((subtest: XmlSubtest) => subtest.command);
     TESTS[name] = { name, desc, keywords, subtests };
   }
   return Object.keys(TESTS).length;
@@ -47,7 +47,7 @@ export function listXmlTests(keywords?: string[] | string) {
         testName,
         test.desc || '',
         ...(test.keywords || []),
-        ...test.subtests.map(s => s.name + ' ' + (s.desc || ''))
+        ...test.subtests.map(subtest => subtest.name + ' ' + (subtest.desc || ''))
       ].join(' ').toLowerCase();
 
       const matchesKeywords = keywordArray.some(keyword =>
@@ -71,5 +71,5 @@ export function listXmlTests(keywords?: string[] | string) {
     });
   }
 
-  return results.sort((a, b) => a.name.localeCompare(b.name));
+  return results.sort((first, second) => first.name.localeCompare(second.name));
 }

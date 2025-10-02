@@ -22,3 +22,14 @@ export type CmdItem = {
   command: string;
   score: number;
 };
+
+export type ValidationResult = {
+  valid: boolean;
+  stderr: string;
+};
+
+export type OptionInfo = {
+  filter: string;
+  option: string;
+  desc: string;
+};

@@ -5,13 +5,12 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { readFileSync } from "fs";
 
 import { loadXmlTests } from "./utils/xml-tests.js";
-import {
-  decomposeQuery,
-  scoreTest,
-  extractAndScoreCommands,
-  deduplicateAndSort
-} from "./utils/scoring.js";
+import { scoreTest, extractAndScoreCommands, deduplicateAndSort } from "./utils/scoring.js";
 import { buildInMemoryIndex } from "./utils/indexing.js";
+import { validateGpacCommand } from "./utils/gpac-validator.js";
+import { buildIndex, findOptionInFilters, getFilterHelp } from "./utils/gpac-docs.js";
+import { buildMP4BoxIndex } from "./utils/mp4box-docs.js";
+import { cleanCommand } from "./utils/command-cleaner.js";
 
 const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_descriptions.xml";
 const ALIASES_PATH = process.env.ALIASES_PATH || "./aliases.json";
@@ -32,15 +31,104 @@ try {
 }
 
 // --- Boot + In-memory Index ---
-await loadXmlTests(XML_PATH).then((n: number) => console.error(`[XML] tests: ${n}`));
+await loadXmlTests(XML_PATH).then((testCount: number) => console.error(`[XML] tests: ${testCount}`));
 
 /** RAM Index */
 const testByName = buildInMemoryIndex(aliases);
 console.error(`[INDEX] tests: ${testByName.size}`);
 
+// Build GPAC and MP4Box indexes at startup
+buildIndex();
+buildMP4BoxIndex();
+
 /** Constants */
 const MAX_LIMIT = 50;
 const DEFAULT_LIMIT = 5;
+
+// --- Validation Tool ---
+server.registerTool(
+  "validate_gpac_command",
+  {
+    title: "Validate GPAC command syntax",
+    description: [
+      "Static validation of GPAC/MP4Box commands without executing media.",
+      "Checks filter options via 'gpac -h filter.option' and MP4Box switches.",
+      "",
+      "Returns: {valid: boolean, errors: [{type, filter?, option?, message, suggestion?}]}",
+      "",
+      "IMPORTANT: Always validate commands before presenting to user."
+    ].join("\n"),
+    inputSchema: {
+      command: z.string().min(1).describe("GPAC/MP4Box command to validate")
+    }
+  },
+  async ({ command }) => {
+    const result = validateGpacCommand(command);
+    return {
+      content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+    };
+  }
+);
+
+// --- Filter Help Tool ---
+server.registerTool(
+  "get_filter_help",
+  {
+    title: "Get GPAC filter documentation",
+    description: [
+      "Get help for a specific filter or find which filters have a given option.",
+      "",
+      "Modes:",
+      "• filter='<name>' → returns `gpac -h <filter>` output",
+      "• option='<name>' → returns list of filters that have this option"
+    ].join("\n"),
+    inputSchema: {
+      filter: z.string().optional().describe("Filter name to get help for"),
+      option: z.string().optional().describe("Option name to search across filters")
+    }
+  },
+  async ({ filter, option }) => {
+    if (filter) {
+      const help = getFilterHelp(filter);
+      return {
+        content: [{ type: "text", text: help }]
+      };
+    }
+
+    if (option) {
+      const results = findOptionInFilters(option);
+
+      if (results.length === 0) {
+        return {
+          content: [{
+            type: "text",
+            text: JSON.stringify({ error: `No filter found with option '${option}'` }, null, 2)
+          }]
+        };
+      }
+
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({
+            option,
+            filters: results.map(result => ({
+              filter: result.filter,
+              description: result.desc
+            }))
+          }, null, 2)
+        }]
+      };
+    }
+
+    return {
+      content: [{
+        type: "text",
+        text: JSON.stringify({ error: "Provide either 'filter' or 'option' parameter" }, null, 2)
+      }]
+    };
+  }
+);
 
 // --- Phase 1: Single Tool ---
 server.registerTool(
@@ -55,9 +143,16 @@ server.registerTool(
       "• STRICT: If no exact indexed match is found, return a structured error { error: 'NO_MATCH', query }.",
       "• NEVER invent or paraphrase commands. No fallbacks. No heuristics outside the index.",
       "• When matches exist, return a ranked list of concrete commands with their origin (test/subtest).",
+      "• All commands are AUTOMATICALLY CLEANED (test artifacts removed) and VALIDATED before returning.",
+      "",
+      "Command Cleaning (automatic):",
+      "• Test files → generic placeholders (counter.hvc → input.hevc, dead_ogg.ogg → input.ogg)",
+      "• Test-only options removed (!check_dur, subs_sidx, :dur=, :bandwidth=, pssh=, buf=)",
+      "• Original command preserved in 'originalCommand' field if changes made",
+      "• Cleaning notes provided in 'cleaningNotes' field",
       "",
       "Outputs:",
-      "• { total, commands: [{ test, subtest, description, command, confidence }], note? } on success",
+      "• { total, valid, invalid, commands: [...valid], invalidCommands?: [...], note } on success",
       "• { error: 'NO_MATCH', query } on failure"
     ].join("\n"),
     inputSchema: {
@@ -74,66 +169,63 @@ server.registerTool(
       };
     }
 
-    // 1) Decompose query into keywords
-    const queryKeywords = decomposeQuery(query);
-    console.error(`[DEBUG] Query: "${query}" → Keywords: [${queryKeywords.join(", ")}]`);
+    // Split query into words (simple tokenization)
+    const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 2);
 
-    // 2) Find relevant tests using multi-keyword scoring
+    // Score all tests
     const rankedTests = Array.from(testByName.values())
-      .map(test => ({ test, score: scoreTest(test, queryKeywords) }))
+      .map(test => ({ test, score: scoreTest(test, queryWords) }))
       .filter(({ score }) => score > 0)
       .sort((a, b) => b.score - a.score)
       .map(({ test }) => test);
 
-    console.error(`[DEBUG] Found ${rankedTests.length} tests with score > 0`);
-    if (rankedTests.length > 0) {
-      console.error(`[DEBUG] Top 3 tests: ${rankedTests.slice(0, 3).map(t => t.name).join(", ")}`);
+    if (rankedTests.length === 0) {
+      return {
+        content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query }, null, 2) }]
+      };
     }
 
-    // 3) Extract and score commands from ranked tests
-    const enableDebug = query.toLowerCase().includes("rtp");
-    const pool = extractAndScoreCommands(rankedTests, queryKeywords, query, enableDebug);
-    console.error(`[DEBUG] Command pool size: ${pool.length}`);
-
-    if (pool.length > 0) {
-      console.error(`[DEBUG] Top 3 commands by score:`);
-      pool.slice(0, 3).forEach(cmd => {
-        console.error(`  - ${cmd.test}/${cmd.subtest}: score=${cmd.score}`);
-      });
-    }
-
-    // 4) Sort + deduplicate by command line
+    // Extract and score commands
+    const pool = extractAndScoreCommands(rankedTests, queryWords);
     const topCommands = deduplicateAndSort(pool, limit ?? DEFAULT_LIMIT, MAX_LIMIT);
 
-    if (STRICT_MODE && topCommands.length === 0) {
-      return {
-        content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query }, null, 2) }]
-      };
-    }
-
     if (topCommands.length === 0) {
-      // If not STRICT, you could return a graceful empty payload — but in Phase 1, STRICT is recommended.
       return {
         content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query }, null, 2) }]
       };
     }
 
-    // 5) Success payload
-    const commands = topCommands.map(cmdItem => ({
-      test: cmdItem.test,
-      subtest: cmdItem.subtest,
-      description: (cmdItem.desc || "").slice(0, 180),
-      command: cmdItem.command,
-      confidence: cmdItem.score >= 8 ? "high" : "medium"
-    }));
+    // Clean & validate commands before returning
+    const commands = topCommands.map(cmd => {
+      const { cleaned, changes } = cleanCommand(cmd.command);
+      const validation = validateGpacCommand(cleaned);
 
-    const payload = {
-      total: commands.length,
-      commands,
-      note: `Found ${commands.length} command(s).`
+      return {
+        test: cmd.test,
+        subtest: cmd.subtest,
+        description: (cmd.desc || "").slice(0, 180),
+        command: cleaned,
+        originalCommand: changes.length > 0 ? cmd.command : undefined,
+        cleaningNotes: changes.length > 0 ? changes : undefined,
+        confidence: cmd.score >= 3 ? "high" : "medium",
+        validated: validation.valid,
+        validationErrors: validation.valid ? undefined : validation.errors
+      };
+    });
+
+    const validCommands = commands.filter(cmd => cmd.validated);
+    const invalidCommands = commands.filter(cmd => !cmd.validated);
+
+    return {
+      content: [{ type: "text", text: JSON.stringify({
+        total: commands.length,
+        valid: validCommands.length,
+        invalid: invalidCommands.length,
+        commands: validCommands,
+        invalidCommands: invalidCommands.length > 0 ? invalidCommands : undefined,
+        note: `Found ${validCommands.length} valid command(s)${invalidCommands.length > 0 ? ` (${invalidCommands.length} invalid)` : ""}.`
+      }, null, 2) }]
     };
-
-    return { content: [{ type: "text", text: JSON.stringify(payload, null, 2) }] };
   }
 );
 
