@@ -27,6 +27,7 @@ export function buildInMemoryIndex(
       name: xmlTest.name,
       description: xmlTest.desc ?? "",
       keywords: enrichedKeywords,
+      file: xmlTest.file,
       subtests: (xmlTest.subtests ?? []).map((xmlSubtest: any) => ({
         testName: xmlTest.name,
         subtestName: xmlSubtest.name,
@@ -34,7 +35,9 @@ export function buildInMemoryIndex(
         keywords: Array.isArray(xmlSubtest.keywords) && xmlSubtest.keywords.length
           ? xmlSubtest.keywords
           : enrichedKeywords,
-        command: xmlSubtest.command
+        command: xmlSubtest.command,
+        file: xmlTest.file,
+        line: xmlSubtest.line
       }))
     };
     testByName.set(indexedTest.name, indexedTest);

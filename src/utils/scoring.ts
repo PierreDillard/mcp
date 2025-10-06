@@ -70,7 +70,9 @@ export function extractAndScoreCommands(
         subtest: subtest.subtestName,
         desc: subtest.description,
         command: subtest.command,
-        score: scoreCommand(subtest, subtest.command, queryWords)
+        score: scoreCommand(subtest, subtest.command, queryWords),
+        file: subtest.file,
+        line: subtest.line
       });
     }
   }

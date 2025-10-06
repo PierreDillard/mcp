@@ -6,12 +6,15 @@ export type IndexedSubtest = {
   description: string;
   keywords: string[];
   command?: string;
+  file?: string;
+  line?: number;
 };
 
 export type IndexedTest = {
   name: string;
   description?: string;
   keywords: string[];
+  file?: string;
   subtests: IndexedSubtest[];
 };
 
@@ -21,6 +24,8 @@ export type CmdItem = {
   desc?: string;
   command: string;
   score: number;
+  file?: string;
+  line?: number;
 };
 
 export type ValidationResult = {

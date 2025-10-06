@@ -13,8 +13,22 @@ const TEST_FILES: Record<string, string> = {
   "bifs-all.bt": "scene.bt",
   "counter_30s": "input",
   "test.mp4": "input.mp4",
-  "auxiliary_files/": "media/"
+  "auxiliary_files/": "media/",
+  // Generic test placeholders
+  "file.ts": "input.ts",
+  "file.mp4": "input.mp4",
+  "file.mpd": "output.mpd",
+  // Test-specific directory patterns
+  "myrep/": "segments/",
+  "out/": ""
 };
+
+/** Test environment variables to remove */
+const TEST_ENV_VARS = [
+  "$TEMP_DIR/",
+  "$EXTERNAL_MEDIA_DIR/",
+  "$MEDIA_DIR/"
+];
 
 /** Test-only options to remove (not needed for user commands) */
 const TEST_OPTIONS = [
@@ -32,6 +46,14 @@ const TEST_OPTIONS = [
 export function cleanCommand(cmd: string): { cleaned: string; changes: string[] } {
   let cleaned = cmd;
   const changes: string[] = [];
+
+  // Remove test environment variables first
+  for (const envVar of TEST_ENV_VARS) {
+    if (cleaned.includes(envVar)) {
+      cleaned = cleaned.replace(new RegExp(envVar.replace(/\$/g, "\\$"), "g"), "");
+      changes.push(`Removed ${envVar}`);
+    }
+  }
 
   // Replace test files with placeholders
   for (const [testFile, placeholder] of Object.entries(TEST_FILES)) {

@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 import { XMLParser } from "fast-xml-parser";
 
-export type XmlSubtest = { name: string; desc?: string; command: string; keywords?: string[] };
-export type XmlTest = { name: string; desc?: string; keywords?: string[]; subtests: XmlSubtest[] };
+export type XmlSubtest = { name: string; desc?: string; command: string; keywords?: string[]; line?: number };
+export type XmlTest = { name: string; desc?: string; keywords?: string[]; file?: string; subtests: XmlSubtest[] };
 
 let TESTS: Record<string, XmlTest> = {};
 
@@ -17,6 +17,7 @@ export async function loadXmlTests(xmlPath: string) {
     const name = test?.["@_name"] ?? test?.name;
     if (!name) continue;
     const desc = test?.["@_desc"] ?? test?.desc;
+    const file = test?.["@_file"] ?? test?.file;
     const keywords = String(test?.["@_keywords"] ?? test?.keywords ?? "")
       .split(/\s+/).filter(Boolean);
     const subs = Array.isArray(test?.Subtest) ? test.Subtest : (test?.Subtests?.Subtest ?? []);
@@ -24,14 +25,16 @@ export async function loadXmlTests(xmlPath: string) {
       const command = subtest?.Command ?? subtest?.command ?? "";
       const subtestKeywords = String(subtest?.["@_keywords"] ?? subtest?.keywords ?? "")
         .split(/\s+/).filter(Boolean);
+      const line = subtest?.["@_line"] ?? subtest?.line;
       return {
         name: subtest?.["@_name"] ?? subtest?.name ?? "sub",
         desc: subtest?.["@_desc"] ?? subtest?.desc,
         command: typeof command === 'string' ? command : String(command || ""),
-        keywords: subtestKeywords
+        keywords: subtestKeywords,
+        line: line ? parseInt(String(line), 10) : undefined
       };
     }).filter((subtest: XmlSubtest) => subtest.command);
-    TESTS[name] = { name, desc, keywords, subtests };
+    TESTS[name] = { name, desc, keywords, file, subtests };
   }
   return Object.keys(TESTS).length;
 }
@@ -61,12 +64,14 @@ export function listXmlTests(keywords?: string[] | string) {
       name: testName,
       desc: test.desc,
       keywords: test.keywords,
+      file: test.file,
       subtestCount: test.subtests.length,
       subtests: test.subtests.map(subtest => ({
         name: subtest.name,
         desc: subtest.desc,
         command: subtest.command,
-        keywords: subtest.keywords
+        keywords: subtest.keywords,
+        line: subtest.line
       }))
     });
   }

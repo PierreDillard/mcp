@@ -57,7 +57,8 @@ function parseMP4BoxHelp(output: string, group: string): void {
 
   for (const line of lines) {
     // Match flags like "-add", "-dash", ":sbr", ":asemode", etc.
-    const flagMatch = line.match(/^\s*(-[\w-]+|:[\w-]+)\s+(.+)/);
+    // Note: Flags start at beginning of line (no leading whitespace after ANSI strip)
+    const flagMatch = line.match(/^(-[\w-]+|:[\w-]+)\s*(.+)/);
     if (flagMatch) {
       const flag = flagMatch[1];
       const desc = normalizeWhitespace(flagMatch[2]);

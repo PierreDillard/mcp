@@ -205,6 +205,8 @@ server.registerTool(
         subtest: cmd.subtest,
         description: (cmd.desc || "").slice(0, 180),
         command: cleaned,
+        file: cmd.file,
+        line: cmd.line,
         originalCommand: changes.length > 0 ? cmd.command : undefined,
         cleaningNotes: changes.length > 0 ? changes : undefined,
         confidence: cmd.score >= 3 ? "high" : "medium",
