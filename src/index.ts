@@ -11,6 +11,7 @@ import { validateGpacCommand } from "./utils/gpac-validator.js";
 import { buildIndex, findOptionInFilters, getFilterHelp } from "./utils/gpac-docs.js";
 import { buildMP4BoxIndex } from "./utils/mp4box-docs.js";
 import { cleanCommand } from "./utils/command-cleaner.js";
+import { executeInSandbox, formatSuccessResponse, formatErrorResponse } from "./utils/executor.js";
 
 const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_descriptions.xml";
 const ALIASES_PATH = process.env.ALIASES_PATH || "./aliases.json";
@@ -145,7 +146,7 @@ server.registerTool(
       "• When matches exist, return a ranked list of concrete commands with their origin (test/subtest).",
       "• All commands are AUTOMATICALLY CLEANED (test artifacts removed) and VALIDATED before returning.",
       "",
-      "Command Cleaning (automatic):",
+      "Command Cleaning (automatic, unless explicitly requested by user):",
       "• Test files → generic placeholders (counter.hvc → input.hevc, dead_ogg.ogg → input.ogg)",
       "• Test-only options removed (!check_dur, subs_sidx, :dur=, :bandwidth=, pssh=, buf=)",
       "• Original command preserved in 'originalCommand' field if changes made",
@@ -228,6 +229,90 @@ server.registerTool(
         note: `Found ${validCommands.length} valid command(s)${invalidCommands.length > 0 ? ` (${invalidCommands.length} invalid)` : ""}.`
       }, null, 2) }]
     };
+  }
+);
+
+// --- Execution Tool ---
+server.registerTool(
+  "execute_gpac_command",
+  {
+    title: "Execute GPAC/MP4Box Command",
+    description: [
+      "Executes a GPAC or MP4Box command in a sandboxed temporary directory.",
+      "",
+      "Workflow:",
+      "1. Validates command syntax via gpac -h",
+      "2. Executes in isolated tmpdir if valid",
+      "3. Returns stdout/stderr with exit code",
+      "",
+      "Security:",
+      "• Runs in temporary directory (auto-cleanup)",
+      "• No network access",
+      "• Limited to GPAC/MP4Box commands only",
+      "",
+      "Use cases:",
+      "• Test a command found via find_commands_by_goal",
+      "• Verify command output before production use",
+      "• Debug validation errors with real execution"
+    ].join("\n"),
+    inputSchema: {
+      command: z.string().describe(
+        "The GPAC or MP4Box command to execute (e.g., 'MP4Box -info input.mp4')"
+      ),
+      workDir: z.string().optional().describe(
+        "Optional: absolute path to working directory. If omitted, uses temporary directory."
+      ),
+    },
+  },
+  async ({ command, workDir }) => {
+    // 1. Validate command first
+    const validation = validateGpacCommand(command);
+
+    if (!validation.valid) {
+      return {
+        content: [{
+          type: "text",
+          text: formatErrorResponse(
+            "Command Validation Failed",
+            { errors: validation.errors }
+          )
+        }]
+      };
+    }
+
+    // 2. Execute in sandbox
+    try {
+      const result = await executeInSandbox(command, workDir);
+
+      if (result.exitCode !== 0) {
+        return {
+          content: [{
+            type: "text",
+            text: formatErrorResponse("Execution Failed", result)
+          }]
+        };
+      }
+
+      // Detect output type (XML if contains <?xml)
+      const outputType = result.stdout.trim().startsWith("<?xml") ? "xml" : "text";
+
+      return {
+        content: [{
+          type: "text",
+          text: formatSuccessResponse("Command Executed Successfully", result, outputType)
+        }]
+      };
+    } catch (error: any) {
+      return {
+        content: [{
+          type: "text",
+          text: formatErrorResponse(
+            "Execution Error",
+            { exitCode: 1, stdout: "", stderr: error.message }
+          )
+        }]
+      };
+    }
   }
 );
 

@@ -1,0 +1,46 @@
+# Node modules (will be installed in container)
+node_modules/
+.pnpm-store/
+
+# Build artifacts (will be built in container)
+dist/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+test_*.mp4
+*.vtt
+*.srt
+*.txt
+player.html
+audio_mono.mp3
+cmaf_analysis.txt
+extracted_subtitles.vtt
+subtitles.srt
+test_analysis.txt
+test_with_subs.mp4
+
+# Temporary
+tmp/
+temp/
+*.tmp
+
+# Documentation (optional - keep if needed in image)
+# doc/
+# README.md
