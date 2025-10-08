@@ -4,28 +4,60 @@ A Model Context Protocol (MCP) server that provides intelligent access to the GP
 
 ---
 
-## Quick Start with Claude Code
+## Quick Start with Docker (Recommended)
 
 ### Prerequisites
-- Node.js 18+ and pnpm  
-- Basic familiarity with MCP configuration  
+- Docker
 
-### 1. Clone and Build
+### 1. Build the Docker image
 ```bash
-git clone <repository-url>
-cd mcp
-pnpm install
-pnpm run build
-````
+docker build -t gpac-testsuite-mcp .
+```
 
 ### 2. Configure Claude Code
 
-Register the MCP server globally:
+Edit `~/.claude/mcp_servers.json`:
 
+```json
+{
+  "mcpServers": {
+    "gpac-testsuite": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "gpac-testsuite-mcp"]
+    }
+  }
+}
+```
+
+Restart Claude Code. The MCP server will be available globally across all projects.
+
+## Local Development
+
+### Prerequisites
+- Node.js 18+ and pnpm
+
+### 1. Build
 ```bash
-claude mcp add gpac-testsuite \
-  --env XML_TESTS_PATH=/absolute/path/to/all_tests_descriptions.xml \
-  --env SCRIPTS_DIR=/absolute/path/to/scripts \
-  -- /absolute/path/to/node /absolute/path/to/mcp/dist/index.js
+pnpm install
+pnpm run build
+```
+
+### 2. Configure Claude Code
+
+Edit `~/.claude/mcp_servers.json`:
+
+```json
+{
+  "mcpServers": {
+    "gpac-testsuite": {
+      "command": "node",
+      "args": ["/absolute/path/to/dist/index.js"],
+      "env": {
+        "XML_TESTS_PATH": "/absolute/path/to/all_tests_descriptions.xml",
+        "ALIASES_PATH": "/absolute/path/to/aliases.json"
+      }
+    }
+  }
+}
 ```
 
