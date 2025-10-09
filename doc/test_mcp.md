@@ -133,3 +133,155 @@ gpac -i input.mp4 inspect:deep:analyze=on:log=cmaf_analysis.txt
 - `cmfc` - CMAF brand for chunked/segment files
 
 The `inspect` filter with `analyze=on` performs deep packet-level analysis and can detect CMAF-specific structures.
+
+## Q: How do I inspect all frames from source with GPAC?
+
+**A:** To inspect all frames from a source file with GPAC, use the **`inspect` filter** with the `deep` option:
+
+```bash
+gpac -i input.mp4 inspect:deep:interleave=false:log=inspect.txt
+```
+
+**Key options explained:**
+
+- `inspect:deep` - Performs deep inspection of all frames (not just structure)
+- `interleave=false` - Outputs each PID sequentially instead of interleaved
+- `log=inspect.txt` - Writes results to a file (optional, omit to print to stdout)
+
+**Common variations:**
+
+```bash
+# Inspect and print to console
+gpac -i input.mp4 inspect:deep
+
+# Inspect first N seconds only
+gpac -i input.mp4 inspect:deep:dur=5
+
+# Inspect with full analysis
+gpac -i input.mp4 inspect:deep:full:interleave=false
+```
+
+This works with any media container (MP4, MKV, MPD, TS, etc.). The `inspect` filter will decode and analyze every frame in the source.
+
+## Q: How do I create HLS session from input using 0.5s fragments in raw formats and redirect output to two different folders?
+
+**A:** To create an HLS session with 0.5s fragments in raw format and output to multiple folders:
+
+```bash
+gpac -i input.hevc dasher:cmfc:cdur=0.5:mname=m3u8:muxtype=raw -o hls3/live.m3u8 -o hls4/live.m3u8
+```
+
+**Key options explained:**
+
+- `dasher` - DASH/HLS packager filter
+- `cmfc` - Use CMAF brand (required for HLS)
+- `cdur=0.5` - Fragment duration of 0.5 seconds
+- `mname=m3u8` - Generate HLS manifest (`.m3u8` instead of `.mpd`)
+- `muxtype=raw` - Output raw format (no MP4 container wrapping)
+- `-o hls3/live.m3u8` - First output destination
+- `-o hls4/live.m3u8` - Second output destination (clone)
+
+**Variations:**
+
+```bash
+# HLS with CMAF fragments (TS format instead of raw)
+gpac -i input.mp4 dasher:cmfc:cdur=0.5:mname=m3u8 -o hls1/live.m3u8 -o hls2/live.m3u8
+
+# With explicit segment duration
+gpac -i input.hevc dasher:cmfc:cdur=0.5:segdur=2:mname=m3u8:muxtype=raw -o folder1/live.m3u8 -o folder2/live.m3u8
+```
+
+The `-o` option can be repeated to clone the output to multiple destinations simultaneously. The folders will be created automatically if they don't exist.
+
+## Q: How do I play a source for 1 second using compositor VR/360 mode?
+
+**A:** To play a source for 1 second using compositor VR/360 mode:
+
+```bash
+gpac --noaudio -blacklist=vtbdec,nvdec -mp4c input.mpd#VR -runfor=1000
+```
+
+**Key options explained:**
+
+- `--noaudio` - Disable audio output
+- `-blacklist=vtbdec,nvdec` - Disable hardware decoders (for consistent behavior)
+- `-mp4c` - Use MP4Client/compositor mode
+- `input.mpd#VR` - Input file with `#VR` fragment to enable VR/360 mode
+- `-runfor=1000` - Run for 1000 milliseconds (1 second)
+
+**Variations:**
+
+```bash
+# Play for 0.5 seconds
+gpac --noaudio -blacklist=vtbdec,nvdec -mp4c input.mpd#VR -runfor=500
+
+# Play in 2D mode (without VR)
+gpac --noaudio -blacklist=vtbdec,nvdec -mp4c input.mpd -runfor=1000
+
+# With audio enabled
+gpac -blacklist=vtbdec,nvdec -mp4c input.mpd#VR -runfor=1000
+```
+
+The `#VR` fragment identifier tells the compositor to use VR/360 rendering mode for equirectangular or cubemap video.
+
+## Q: How do I add a DIMS file to a new MP4?
+
+**A:** To add a DIMS file to a new MP4, use MP4Box:
+
+```bash
+MP4Box -add shapes-circle-01-t.dml -new dims.mp4
+```
+
+**Key options explained:**
+
+- `-add` - Add a track to the MP4 file
+- `shapes-circle-01-t.dml` - DIMS file to import
+- `-new` - Create a new MP4 file
+
+**Variations:**
+
+```bash
+# Add DIMS file with compression
+MP4Box -add file.dml -new dimz.mp4
+
+# Add multiple files
+MP4Box -add video.264 -add audio.aac -add dims.dml -new output.mp4
+```
+
+**Note:** The `-new` switch may not be available in all MP4Box versions. If it fails, try without `-new`:
+
+```bash
+MP4Box -add file.dml dims.mp4
+```
+
+## Q: How do I split each temporal sublayer of each layer of input HEVC in separate tracks?
+
+**A:** To split each temporal sublayer of each layer of input HEVC into separate tracks, use GPAC with the `bssplit` filter:
+
+```bash
+gpac -i shvc.265 bssplit:ltid=all @ -o scal_split.mp4
+```
+
+**Key options explained:**
+
+- `bssplit` - Bitstream splitter filter
+- `ltid=all` - Split **all** temporal sublayers of each layer into separate tracks
+- `@` - Process all input PIDs
+
+**Variations:**
+
+```bash
+# Split only specific temporal IDs (e.g., 1 and 2 across all layers)
+gpac -i shvc.265 bssplit:ltid=.1,.2 @ -o scal_split.mp4
+
+# Split specific layer+temporal combinations (layer 0, temporal IDs 1 and 2)
+gpac -i shvc.265 bssplit:ltid=0.1,0.2 @ -o scal_split.mp4
+```
+
+**To reverse the process** (aggregate back into single track):
+
+```bash
+gpac -i scal_split.mp4 bsagg @ -o scal_agg.mp4
+```
+
+**Note:** This also works for SVC (H.264/AVC Scalable Video Coding) - just replace the input with your `.264` file.

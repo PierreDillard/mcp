@@ -10,7 +10,7 @@ type MP4BoxFlag = {
 
 // Global MP4Box indexes
 const FLAG_INDEX = new Map<string, MP4BoxFlag[]>();
-const GROUPS = ["import", "dash", "hint"] as const;
+const GROUPS = ["general", "import", "dash", "hint"] as const;
 let INDEXED = false;
 
 /** Strip ANSI color codes */

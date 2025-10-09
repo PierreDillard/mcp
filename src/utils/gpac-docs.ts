@@ -11,7 +11,6 @@ type OptionInfo = {
 // Global indexes
 const OPTION_INDEX = new Map<string, OptionInfo[]>();
 const FILTER_SET = new Set<string>();
-const GLOBAL_OPTIONS = new Map<string, string>(); // --option → description
 let INDEXED = false;
 
 /** Strip ANSI color codes */
@@ -39,35 +38,10 @@ export function buildIndex(): void {
     });
 
     parseAllFiltersHelp(output);
-    parseGlobalOptions();
     INDEXED = true;
-    console.error(`[GPAC-DOCS] Indexed ${OPTION_INDEX.size} options, ${FILTER_SET.size} filters, ${GLOBAL_OPTIONS.size} global opts`);
+    console.error(`[GPAC-DOCS] Indexed ${OPTION_INDEX.size} options, ${FILTER_SET.size} filters`);
   } catch (error: any) {
     console.error("[GPAC-DOCS] Failed to index filters:", error.message);
-  }
-}
-
-/** Parse global GPAC options (--block_size, etc.) */
-function parseGlobalOptions(): void {
-  try {
-    const output = execSync("gpac -h doc", {
-      encoding: "utf-8",
-      timeout: 5000,
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env, LANG: "C", LC_ALL: "C", COLUMNS: "200" }
-    });
-
-    const cleaned = stripAnsi(output);
-    const lines = cleaned.split("\n");
-
-    for (const line of lines) {
-      const match = line.match(/^\s+(--[\w-]+)\s+(.+)/);
-      if (match) {
-        GLOBAL_OPTIONS.set(match[1], normalizeWhitespace(match[2]));
-      }
-    }
-  } catch (error: any) {
-    console.error("[GPAC-DOCS] Failed to parse global options:", error.message);
   }
 }
 
