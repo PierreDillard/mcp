@@ -16,8 +16,6 @@ import { executeInSandbox, formatSuccessResponse, formatErrorResponse } from "./
 const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_descriptions.xml";
 const ALIASES_PATH = process.env.ALIASES_PATH || "./aliases.json";
 
-// Anti-hallucination mode: only return exact matches from index
-const STRICT_MODE = true;
 
 const server = new McpServer({ name: "testsuite-mcp", version: "0.1.0" });
 

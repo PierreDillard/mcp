@@ -32,12 +32,13 @@ function validateGpacFilters(cmd: string): ValidationResult {
     const [, filter, optStr] = match;
     if (filter === 'i' || filter === 'o') continue;
 
-    // Check if filter name is valid
-    if (!isFilterName(filter)) {
+    // Check if filter name is valid (dynamically with gpac -h)
+    const filterCheck = checkFilterName(filter);
+    if (!filterCheck.valid) {
       errors.push({
         type: 'filter',
         filter,
-        message: `'${filter}' is not a valid GPAC filter. See 'gpac -ha filters'.`
+        message: filterCheck.message
       });
       continue;
     }
@@ -69,6 +70,35 @@ function validateGpacFilters(cmd: string): ValidationResult {
   return { valid: errors.length === 0, errors };
 }
 
+function checkFilterName(filter: string): {valid:boolean; message:string} {
+  // First check the index (fast path)
+  if (isFilterName(filter)) {
+    return {valid:true, message:'OK'};
+  }
+
+  // Fallback: query gpac -h <filter> directly
+  try {
+    const out = execSync(`gpac -h ${filter}`, {
+      encoding: 'utf-8',
+      timeout: 2000,
+      stdio: ['ignore','pipe','pipe'],
+      env: { ...process.env, LANG: "C", LC_ALL: "C" }
+    });
+
+    // If help is returned and doesn't say "not found", filter exists
+    if (out && !out.toLowerCase().includes('not found')) {
+      return {valid:true, message:'OK'};
+    }
+  } catch (e: any) {
+    // gpac -h <filter> failed
+  }
+
+  return {
+    valid: false,
+    message: `'${filter}' is not a valid GPAC filter. Try 'gpac -h ${filter}' or 'gpac -ha filters'.`
+  };
+}
+
 function validateMP4Box(cmd: string): ValidationResult {
   const errors: ValidationError[] = [];
 
@@ -87,17 +117,49 @@ function validateMP4Box(cmd: string): ValidationResult {
   while ((match = switchRegex.exec(cmd)) !== null) {
     const flag = `-${match[1]}`;
 
-    if (!isMP4BoxFlag(flag)) {
+    // Check dynamically with MP4Box -h
+    const check = checkMP4BoxFlag(flag);
+    if (!check.valid) {
       errors.push({
         type: 'switch',
         switch: match[1],
-        message: `Unknown MP4Box switch: ${flag}`,
-        suggestion: `Check 'MP4Box -h import/dash/hint'`
+        message: check.message,
+        suggestion: check.suggestion
       });
     }
   }
 
   return { valid: errors.length === 0, errors };
+}
+
+function checkMP4BoxFlag(flag: string): {valid:boolean; message:string; suggestion?:string} {
+  // First check the index (fast path)
+  if (isMP4BoxFlag(flag)) {
+    return {valid:true, message:'OK'};
+  }
+
+  // Fallback: query MP4Box -h <flag> directly
+  try {
+    const out = execSync(`MP4Box -h ${flag.slice(1)}`, {
+      encoding: 'utf-8',
+      timeout: 2000,
+      stdio: ['ignore','pipe','pipe'],
+      env: { ...process.env, LANG: "C", LC_ALL: "C" }
+    });
+
+    // If help is returned, the flag exists
+    if (out && !out.toLowerCase().includes('unknown option')) {
+      return {valid:true, message:'OK'};
+    }
+  } catch (e: any) {
+    // MP4Box -h <flag> failed, flag probably doesn't exist
+  }
+
+  return {
+    valid: false,
+    message: `Unknown MP4Box switch: ${flag}`,
+    suggestion: `Try 'MP4Box -h ${flag.slice(1)}' or 'MP4Box -h import/dash/hint'`
+  };
 }
 
 function checkOption(filter: string, opt: string): {valid:boolean; message:string; suggestion?:string} {
