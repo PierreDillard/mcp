@@ -25,12 +25,22 @@ export function validateGpacCommand(cmd: string): ValidationResult {
 
 function validateGpacFilters(cmd: string): ValidationResult {
   const errors: ValidationError[] = [];
+
+  // Remove input/output file paths to avoid validating file extensions as filters
+  // Patterns: -i path, -o path, -src path
+  const cleanedCmd = cmd.replace(/\s+-[io]\s+[^\s]+/g, ' ')
+                        .replace(/\s+-src\s+[^\s]+/g, ' ');
+
   const filterRegex = /(\w+):([^\s@]+)/g;
   let match;
 
-  while ((match = filterRegex.exec(cmd)) !== null) {
+  while ((match = filterRegex.exec(cleanedCmd)) !== null) {
     const [, filter, optStr] = match;
-    if (filter === 'i' || filter === 'o') continue;
+
+    // Skip common file extensions that might be captured
+    if (['mp4', 'mpd', 'aac', 'm4a', 'mp3', 'ts', 'mkv', 'avi', 'mov', 'hevc', 'h264', 'avc'].includes(filter.toLowerCase())) {
+      continue;
+    }
 
     // Check if filter name is valid (dynamically with gpac -h)
     const filterCheck = checkFilterName(filter);

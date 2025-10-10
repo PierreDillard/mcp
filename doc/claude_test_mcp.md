@@ -285,3 +285,115 @@ gpac -i scal_split.mp4 bsagg @ -o scal_agg.mp4
 ```
 
 **Note:** This also works for SVC (H.264/AVC Scalable Video Coding) - just replace the input with your `.264` file.
+
+## Q: How do I remove SEI messages and inject timecodes in an HEVC bitstream?
+
+**A:** Use GPAC's `bsrw` (BitStream ReWriter) filter to remove SEI messages and inject timecodes:
+
+**Remove all SEI messages:**
+```bash
+gpac -i input.hevc bsrw:rmsei -o output.hevc
+```
+
+**Remove specific SEI types only (blacklist mode):**
+```bash
+# Remove only SEI types 4, 137, and 144
+gpac -i input.hevc bsrw:rmsei:seis=4,137,144 -o output.hevc
+```
+
+**Keep only specific SEI types (whitelist mode):**
+```bash
+# Keep only SEI types 1 and 6
+gpac -i input.hevc bsrw:seis=1,6 -o output.hevc
+```
+
+**Inject timecodes based on composition timestamps:**
+```bash
+gpac -i input.hevc bsrw:tc=insert -o output.hevc
+```
+
+**Inject timecodes with starting offset:**
+```bash
+# Start timecodes at 00:00:10:00 (HH:MM:SS:FF)
+gpac -i input.hevc bsrw:tc=insert:tcsc=TC00:00:10:00 -o output.hevc
+```
+
+**Inject timecodes using UTC time:**
+```bash
+gpac -i input.hevc bsrw:tc=utc -o output.hevc
+```
+
+**Combined operation (remove SEI and inject timecodes):**
+```bash
+gpac -i input.hevc bsrw:rmsei:tc=insert -o output.hevc
+```
+
+**Key options explained:**
+
+- `bsrw` - BitStream ReWriter filter
+- `rmsei` - Remove SEI messages
+- `seis=4,137,144` - List of SEI types to remove (when used with `rmsei`) or keep (without `rmsei`)
+- `tc=insert` - Insert timecodes based on CTS (Composition Time Stamp)
+- `tc=utc` - Insert timecodes based on UTC time
+- `tcsc=TC<HH:MM:SS:FF>` - Timecode start value or offset
+- `tcdf` - Enable NTSC drop-frame timecode counting
+
+**Other timecode modes:**
+```bash
+# Shift existing timecodes by 10 seconds
+gpac -i input.hevc bsrw:tc=shift:tcsc=TC00:00:10:00 -o output.hevc
+
+# Set all timecodes to constant value
+gpac -i input.hevc bsrw:tc=constant:tcsc=TC01:00:00:00 -o output.hevc
+
+# Remove timecodes
+gpac -i input.hevc bsrw:tc=remove -o output.hevc
+```
+
+**Note:** This works for AVC/H264, HEVC, and VVC video streams.
+
+## Q: How do I create DASH session from two inputs?
+
+**A:** There are several ways to create a DASH session from multiple inputs:
+
+**Using gpac (simplest):**
+```bash
+gpac -i src1.mp4 -i src2.mp4 -o dash/output.mpd
+```
+
+**Using MP4Box with track selection:**
+```bash
+MP4Box -dash 1000 -rap input.mp4#video input.mp4#audio -out output.mpd
+```
+
+**Key options explained:**
+- `1000` - Segment duration in milliseconds (1 second)
+- `-rap` - Split segments at Random Access Points (keyframes)
+- `#video` / `#audio` - Select specific tracks from the input file
+
+**For live profile with multiple resolution inputs:**
+```bash
+MP4Box -dash 2000 -frag 1000 -profile live -out output.m3u8 \
+  video_low.264 video_high.264 audio.aac
+```
+
+**Options:**
+- `-dash 2000` - 2 second segments
+- `-frag 1000` - 1 second fragments
+- `-profile live` - Use DASH live profile
+- Multiple input files create adaptive bitrate streaming
+
+**For dynamic live DASH:**
+```bash
+MP4Box -dash-live 2000 -closest -subdur 2000 -profile live -mpd-refresh 10 \
+  -time-shift -1 -run-for 4000 input.mp4#video input.mp4#audio -out output.mpd
+```
+
+**Options:**
+- `-closest` - Split at closest RAP
+- `-subdur 2000` - Process 2 seconds of input
+- `-mpd-refresh 10` - Update manifest every 10 seconds
+- `-time-shift -1` - Keep all segments (no time shift buffer limit)
+- `-run-for 4000` - Run for 4 seconds then exit
+
+The simplest approach is the first command - GPAC will automatically handle DASH creation from multiple inputs.
