@@ -397,3 +397,158 @@ MP4Box -dash-live 2000 -closest -subdur 2000 -profile live -mpd-refresh 10 \
 - `-run-for 4000` - Run for 4 seconds then exit
 
 The simplest approach is the first command - GPAC will automatically handle DASH creation from multiple inputs.
+
+## Q: How do I encode source BT to MP4 with sync points every second?
+
+**A:** Use MP4Box to encode BIFS (BT format) to MP4 with sync points at 1-second intervals:
+
+```bash
+MP4Box -mp4 -sync 1000 scene.bt
+```
+
+**Key options explained:**
+
+- `MP4Box` - GPAC's multimedia authoring tool
+- `-mp4` - Output format (MP4)
+- `-sync 1000` - Add sync points every 1000 milliseconds (1 second)
+- `scene.bt` - Your input BT (BIFS) file
+
+**Variations:**
+
+```bash
+# Basic usage with your input file
+MP4Box -mp4 -sync 1000 your_scene.bt
+
+# With shadow sync points (for streaming)
+MP4Box -mp4 -shadow 1000 scene.bt
+
+# UTF-16 encoded BT file
+MP4Box -mp4 -sync 1000 bifs-all-utf16.bt
+
+# XMT format instead of BT
+MP4Box -mp4 -sync 1000 scene.xmt
+```
+
+**Options:**
+
+- `-sync N` - Add sync points (RAP - Random Access Points) every N milliseconds
+- `-shadow N` - Add shadow sync points every N milliseconds (alternative encoding)
+
+This command is validated in the GPAC test suite (test: `bifs-all-bt`, subtest: `mp4sync`) as the standard approach for encoding BT/BIFS scenes to MP4 with regular sync point intervals.
+
+## Q: Can I resize and re-encode video in multiple resolutions?
+
+**A:** Yes, GPAC can resize and re-encode video in multiple resolutions, commonly used for adaptive bitrate streaming (ABS) and DASH/HLS delivery.
+
+**Basic example: Resize to single resolution and encode:**
+```bash
+gpac -i input.h264 ffsws:osize=512x512 -o output.mp4
+```
+
+**Resize to multiple resolutions and create DASH with gpac:**
+```bash
+gpac -i input.h264:FID=1 \
+  ffsws:osize=512x512:SID=1 @ enc:c=avc:fintra=1:FID=EV1 \
+  ffsws:osize=256x256:SID=1 @ enc:c=avc:fintra=1:FID=EV2 \
+  -o output.mpd:profile=live:SID=EV1,EV2
+```
+
+**With audio and multiple video resolutions:**
+```bash
+gpac -i video.cmp:FID=1 \
+  ffsws:osize=512x512:SID=1 @ enc:c=avc:fintra=1:FID=EV1 \
+  ffsws:osize=256x256:SID=1 @ enc:c=avc:fintra=1:FID=EV2 \
+  -i audio.mp3:FID=2 @ enc:c=aac:FID=EA \
+  -o output.mpd:profile=live:SID=EV1,EV2,EA
+```
+
+**Key components explained:**
+
+- `ffsws:osize=WIDTHxHEIGHT` - FFmpeg scale filter, resizes video to specified dimensions
+- `SID=1` - Stream ID for input selection before the `@` operator
+- `@` - Splits the filter chain for processing multiple paths in parallel
+- `enc:c=avc:fintra=1` - Encode using AVC codec with 1-second intra period (keyframe interval)
+- `FID=EV1` - Filter ID for output selection and identification in the manifest
+- `profile=live` - Use DASH live profile for streaming
+- `SID=EV1,EV2,EA` - Select final encoded streams for output (video variant 1, video variant 2, audio)
+
+**Simplified approach with MP4Box:**
+```bash
+MP4Box -dash 1000 -profile live -out output.mpd \
+  input.mp4#video:@ffsws:osize=64x64@enc:c=avc:fintra=1:b=100k@@ \
+  ffsws:osize=128x128@enc:c=avc:fintra=1:b=200k \
+  input.mp4#audio
+```
+
+**Key options:**
+- `-dash 1000` - 1-second segment duration
+- `-profile live` - DASH live profile
+- `b=100k` / `b=200k` - Bitrate constraints for each resolution
+- `osize=WIDTHxHEIGHT` - Output size (resolution)
+- `fintra=1` - 1-second intra period
+
+**Output resolutions** can be tailored to requirements:
+- Common patterns: 256x144 (144p), 426x240 (240p), 640x360 (360p), 854x480 (480p), 1280x720 (720p), 1920x1080 (1080p)
+- Custom sizes supported: Any WIDTHxHEIGHT value
+
+This approach is validated in the GPAC test suite (tests: `dash-encode-vv`, `dash-encode-avv`) for creating adaptive bitrate DASH sessions with multiple encoded resolutions.
+
+## Q: How do I clean up or modify video metadata like timecodes?
+
+**A:** GPAC and MP4Box provide several tools to inspect, clean, and modify video metadata including timecodes:
+
+**Inspect metadata with MP4Box:**
+```bash
+MP4Box -info video.mp4
+```
+Displays all file information and metadata.
+
+**Deep metadata analysis with GPAC inspect filter:**
+```bash
+gpac -i video.mp4 inspect:deep:analyze=on:log=inspect.txt
+```
+Performs thorough analysis of metadata and timecodes with logging.
+
+**Dump file structure and metadata boxes:**
+```bash
+MP4Box -dnal 1 video.mp4 -out structure.xml
+```
+Generates XML description of NAL units and boxes to view all timecodes and metadata structures.
+
+**Export track as raw bitstream (for re-encapsulation):**
+```bash
+MP4Box -raw 1 video.mp4 -out track.avc
+```
+Extracts a track for processing and re-encapsulation to clean metadata.
+
+**Clean metadata via re-encapsulation:**
+```bash
+gpac -i video.mp4 -o video_clean.mp4
+```
+Re-encapsulates the file, which removes obsolete or redundant metadata during the process.
+
+**Compress moov box and remove metadata bloat:**
+```bash
+MP4Box --compress=moov -add video.h264 -new video_compressed.mp4
+```
+Compresses the moov box, eliminating redundant metadata entries.
+
+**Key options explained:**
+
+- `MP4Box -info` - Display and verify metadata structure
+- `inspect:deep:analyze=on` - Deep metadata analysis with frame-level information
+- `MP4Box -dnal` - Dump NAL structure with metadata details to XML
+- `MP4Box -raw` - Export raw track for re-encapsulation
+- `--compress=moov` - Compress metadata container to remove bloat
+- Re-encapsulation via `gpac -i -o` - Strips or normalizes metadata during file conversion
+
+**Common use cases:**
+
+- **Analyze**: `MP4Box -info video.mp4` or `gpac -i video.mp4 inspect:deep:log=metadata.txt`
+- **Clean**: Re-encapsulate via `gpac -i input.mp4 -o output.mp4`
+- **Examine structure**: `MP4Box -dnal 1 video.mp4 -out structure.xml`
+- **Remove bloat**: `MP4Box --compress=moov -add stream.h264 -new clean.mp4`
+
+**Note on timecodes specifically:**
+
+For SEI-based timecodes in bitstreams (AVC/H.264, HEVC/H.265, VVC), use the `bsrw` filter (see "How do I remove SEI messages and inject timecodes" for detailed timecode manipulation options).

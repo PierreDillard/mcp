@@ -1,9 +1,31 @@
-/** Simplified scoring: let the LLM handle semantic search */
+/** Simplified scoring with basic synonym support */
 
 import { IndexedTest, IndexedSubtest, CmdItem } from "./types.js";
 
+// Basic synonyms for scoring
+const SCORING_SYNONYMS: Record<string, string[]> = {
+  compress: ["reduce", "optimize", "smaller", "rescale", "scale", "crop", "box_compression"],
+  bitrate: ["bandwidth", "rate", "b", "Maxrate", "TargetRate", "DownloadRate", "max_bw", "min_bw"],
+  encode: ["transcode", "convert", "enc", "ffenc", "resampler", "tx3g2srt", "ttml2srt"],
+  dash: ["segment", "adaptive", "dasher", "dashin", "MPD", "HLS", "ABR", "live", "dynamic"],
+  mux: ["merge", "combine", "add", "multiplexer", "mp4mx", "m2tsmx", "ffmx", "gsfmx", "avimx", "oggmx", "bsagg", "tileagg", "remultiplex"],
+  encrypt: ["protection", "drm", "cecrypt", "cdcrypt", "CENC", "ProtectionScheme", "PSSH", "CryptInfo", "DecryptInfo", "gcryp"],
+};
+
 function normalize(text: string): string {
   return text.toLowerCase();
+}
+
+/**
+ * Get all word variations (word + synonyms)
+ */
+function getWordVariations(word: string): string[] {
+  const normalized = normalize(word);
+  const variations = [normalized];
+  if (SCORING_SYNONYMS[normalized]) {
+    variations.push(...SCORING_SYNONYMS[normalized]);
+  }
+  return variations;
 }
 
 /**
@@ -33,15 +55,24 @@ function buildSubtestSearchText(subtest: IndexedSubtest, command: string): strin
 }
 
 /**
- * Simple keyword matching - count how many query words appear
+ * Simple keyword matching with synonym support
  */
 export function scoreTest(test: IndexedTest, queryWords: string[]): number {
   const searchText = buildSearchText(test);
-  return queryWords.filter(word => searchText.includes(normalize(word))).length;
+  let matches = 0;
+
+  for (const word of queryWords) {
+    const variations = getWordVariations(word);
+    if (variations.some(v => searchText.includes(v))) {
+      matches++;
+    }
+  }
+
+  return matches;
 }
 
 /**
- * Score command by counting query word matches
+ * Score command by counting query word matches with synonym support
  */
 export function scoreCommand(
   subtest: IndexedSubtest,
@@ -49,7 +80,16 @@ export function scoreCommand(
   queryWords: string[]
 ): number {
   const searchText = buildSubtestSearchText(subtest, command);
-  return queryWords.filter(word => searchText.includes(normalize(word))).length;
+  let matches = 0;
+
+  for (const word of queryWords) {
+    const variations = getWordVariations(word);
+    if (variations.some(v => searchText.includes(v))) {
+      matches++;
+    }
+  }
+
+  return matches;
 }
 
 /**

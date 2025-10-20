@@ -3,11 +3,14 @@
 import { execSync } from "child_process";
 import { isFilterName, findOptionInFilters } from "./gpac-docs.js";
 import { isMP4BoxCommand, isMP4BoxFlag } from "./mp4box-docs.js";
+import { isSpecialFilter } from "./doc-ressources.js";
+
+// File extensions to skip during validation (false positives from filter:option parsing)
+const SKIP_EXTENSIONS = new Set(['mp4', 'mpd', 'aac', 'm4a', 'mp3', 'ts', 'mkv', 'avi', 'mov', 'hevc', 'h264', 'avc']);
 
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
-  warnings?: string[];
 }
 
 export interface ValidationError {
@@ -26,21 +29,19 @@ export function validateGpacCommand(cmd: string): ValidationResult {
 function validateGpacFilters(cmd: string): ValidationResult {
   const errors: ValidationError[] = [];
 
-  // Remove input/output file paths to avoid validating file extensions as filters
-  // Patterns: -i path, -o path, -src path
+  // Remove input/output file paths: -i path, -o path, -src path
   const cleanedCmd = cmd.replace(/\s+-[io]\s+[^\s]+/g, ' ')
                         .replace(/\s+-src\s+[^\s]+/g, ' ');
 
+  // Match filter:options pattern
   const filterRegex = /(\w+):([^\s@]+)/g;
   let match;
 
   while ((match = filterRegex.exec(cleanedCmd)) !== null) {
     const [, filter, optStr] = match;
 
-    // Skip common file extensions that might be captured
-    if (['mp4', 'mpd', 'aac', 'm4a', 'mp3', 'ts', 'mkv', 'avi', 'mov', 'hevc', 'h264', 'avc'].includes(filter.toLowerCase())) {
-      continue;
-    }
+    // Skip file extensions (false positives)
+    if (SKIP_EXTENSIONS.has(filter.toLowerCase())) continue;
 
     // Check if filter name is valid (dynamically with gpac -h)
     const filterCheck = checkFilterName(filter);
@@ -80,27 +81,27 @@ function validateGpacFilters(cmd: string): ValidationResult {
   return { valid: errors.length === 0, errors };
 }
 
-function checkFilterName(filter: string): {valid:boolean; message:string} {
-  // First check the index (fast path)
-  if (isFilterName(filter)) {
-    return {valid:true, message:'OK'};
-  }
-
-  // Fallback: query gpac -h <filter> directly
+// Helper to run command safely with timeout
+function runCommand(cmd: string): string | null {
   try {
-    const out = execSync(`gpac -h ${filter}`, {
+    return execSync(cmd, {
       encoding: 'utf-8',
       timeout: 2000,
-      stdio: ['ignore','pipe','pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, LANG: "C", LC_ALL: "C" }
     });
+  } catch (e) {
+    return null;
+  }
+}
 
-    // If help is returned and doesn't say "not found", filter exists
-    if (out && !out.toLowerCase().includes('not found')) {
-      return {valid:true, message:'OK'};
-    }
-  } catch (e: any) {
-    // gpac -h <filter> failed
+function checkFilterName(filter: string): { valid: boolean; message: string } {
+  if (isSpecialFilter(filter)) return { valid: true, message: 'OK (special filter)' };
+  if (isFilterName(filter)) return { valid: true, message: 'OK' };
+
+  const out = runCommand(`gpac -h ${filter}`);
+  if (out && !out.toLowerCase().includes('not found')) {
+    return { valid: true, message: 'OK' };
   }
 
   return {
@@ -142,27 +143,12 @@ function validateMP4Box(cmd: string): ValidationResult {
   return { valid: errors.length === 0, errors };
 }
 
-function checkMP4BoxFlag(flag: string): {valid:boolean; message:string; suggestion?:string} {
-  // First check the index (fast path)
-  if (isMP4BoxFlag(flag)) {
-    return {valid:true, message:'OK'};
-  }
+function checkMP4BoxFlag(flag: string): { valid: boolean; message: string; suggestion?: string } {
+  if (isMP4BoxFlag(flag)) return { valid: true, message: 'OK' };
 
-  // Fallback: query MP4Box -h <flag> directly
-  try {
-    const out = execSync(`MP4Box -h ${flag.slice(1)}`, {
-      encoding: 'utf-8',
-      timeout: 2000,
-      stdio: ['ignore','pipe','pipe'],
-      env: { ...process.env, LANG: "C", LC_ALL: "C" }
-    });
-
-    // If help is returned, the flag exists
-    if (out && !out.toLowerCase().includes('unknown option')) {
-      return {valid:true, message:'OK'};
-    }
-  } catch (e: any) {
-    // MP4Box -h <flag> failed, flag probably doesn't exist
+  const out = runCommand(`MP4Box -h ${flag.slice(1)}`);
+  if (out && !out.toLowerCase().includes('unknown option')) {
+    return { valid: true, message: 'OK' };
   }
 
   return {
@@ -172,18 +158,14 @@ function checkMP4BoxFlag(flag: string): {valid:boolean; message:string; suggesti
   };
 }
 
-function checkOption(filter: string, opt: string): {valid:boolean; message:string; suggestion?:string} {
-  try {
-    const out = execSync(`gpac -h ${filter}.${opt}`, {
-      encoding: 'utf-8',
-      timeout: 2000,
-      stdio: ['ignore','pipe','pipe'],
-      env: { ...process.env, LANG: "C", LC_ALL: "C" }
-    });
-    if (!out.toLowerCase().includes('not found')) return {valid:true, message:'OK'};
-  } catch (e: any) {
-    const sugg = e.stderr?.match(/closest match[es]*:\s*([^\n]+)/i)?.[1]?.trim();
-    return {valid:false, message:`${filter}.${opt} not found`, suggestion:sugg};
+function checkOption(filter: string, opt: string): { valid: boolean; message: string; suggestion?: string } {
+  // Special filters accept generic options that are passed through dynamically
+  if (isSpecialFilter(filter)) return { valid: true, message: 'OK' };
+
+  const out = runCommand(`gpac -h ${filter}.${opt}`);
+  if (out && !out.toLowerCase().includes('not found')) {
+    return { valid: true, message: 'OK' };
   }
-  return {valid:false, message:`Failed to validate ${filter}.${opt}`};
+
+  return { valid: false, message: `${filter}.${opt} not found` };
 }

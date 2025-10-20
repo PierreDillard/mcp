@@ -104,3 +104,69 @@ gpac avmix:pl=my_playlist.json -o output.mp3
 ```
 
 This command will create a new file `output.mp3` with the two audio tracks mixed according to your JSON playlist.
+
+## How do I optimize file size with compression techniques with gpac?
+
+GPAC offers several methods to optimize file size. The two main approaches are re-encoding the content at a lower bitrate (which is lossy) and compressing the container's metadata (which is lossless).
+
+### 1. Re-encoding (Lossy Compression)
+
+This is the most effective way to significantly reduce file size, but it involves a loss of quality. You can use GPAC to re-encode video or audio streams to a lower bitrate. This typically requires GPAC to be compiled with support for external encoders like FFmpeg.
+
+While the `enc` or `ffenc` filters may not be available in all GPAC builds, a command to re-encode a video to a specific bitrate would conceptually look like this:
+
+```sh
+gpac -i input.mp4 @ enc:c=avc:b=500k @ -o output.mp4
+```
+
+In this hypothetical example, `b=500k` sets the target bitrate to 500 kbps. You would need to have a version of GPAC with the appropriate encoding filters installed.
+
+### 2. Compressing MP4 Boxes (Lossless Compression)
+
+The MP4 container format uses "boxes" to store metadata (e.g., `moov` box). You can compress these boxes to save space without affecting the audio or video quality at all. This is useful for reducing the overhead of the container.
+
+Here is an example command that compresses the `moov` box:
+
+```sh
+MP4Box -compress moov input.mp4 -out output.mp4
+```
+
+You can also specify `all` to compress all possible boxes:
+
+```sh
+MP4Box -compress all input.mp4 -out output.mp4
+```
+
+### 3. Fragmentation for Streaming
+
+While not a compression technique, fragmenting an MP4 file is a crucial optimization for streaming (DASH, HLS) and progressive download. It reorganizes the file so that it can be played back while it is still downloading, which improves the user experience.
+
+To fragment a file, you can use:
+
+```sh
+MP4Box -frag 1000 input.mp4 -out output.mp4
+```
+
+This command will create 1-second fragments in the output file.
+
+Which method you choose depends on your goal. If you need the absolute smallest file size and can tolerate a quality reduction, re-encoding is best. If you want to trim some overhead without touching the media quality, compressing the boxes is the way to go.
+
+# Can I resize and re-encode video in multiple resolutions?
+
+**User:** Can I resize and re-encode video in multiple resolutions?
+
+**Gemini:** Yes, you can. I will look for the appropriate command for you.
+
+I found a few commands that should help you.
+
+This command resizes a video to two different resolutions (512x512 and 256x256), encodes them in AVC, and also encodes an audio file in AAC. It then creates a DASH manifest for live streaming:
+`gpac -i count_video.cmp:FID=1 ffsws:osize=512x512:SID=1 @ enc:c=avc:fintra=1:FID=EV1 ffsws:osize=256x256:SID=1 @ enc:c=avc:fintra=1:FID=EV2 -i count_english.mp3:FID=2 @ enc:c=aac:FID=EA -o output.mpd:profile=live:SID=EV1,EV2,EA -blacklist=vtbdec`
+
+Here are a couple of other options:
+
+*   **Resize and encode a single video:**
+    `gpac -i enst_video.h264:FID=1 ffsws:osize=512x512:SID=1 @ enc:c=avc:fintra=1 @ -o output.mpd:profile=live`
+*   **Resize and encode a video into two resolutions (without audio):**
+    `gpac -i enst_video.h264:FID=1 ffsws:osize=512x512:SID=1 @ enc:c=avc:fintra=1:FID=EV1 ffsws:osize=256x256:SID=1 @ enc:c=avc:fintra=1:FID=EV2 -o output.mpd:profile=live:SID=EV1,EV2`
+
+Let me know if you'd like me to explain any of these in more detail or if you have other questions.

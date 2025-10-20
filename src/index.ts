@@ -12,6 +12,7 @@ import { buildIndex, findOptionInFilters, getFilterHelp } from "./utils/gpac-doc
 import { buildMP4BoxIndex } from "./utils/mp4box-docs.js";
 import { cleanCommand } from "./utils/command-cleaner.js";
 import { executeInSandbox, formatSuccessResponse, formatErrorResponse } from "./utils/executor.js";
+import { loadDocResources } from "./utils/doc-ressources.js";
 
 const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_descriptions.xml";
 const ALIASES_PATH = process.env.ALIASES_PATH || "./aliases.json";
@@ -39,6 +40,9 @@ console.error(`[INDEX] tests: ${testByName.size}`);
 // Build GPAC and MP4Box indexes at startup
 buildIndex();
 buildMP4BoxIndex();
+
+// Load filter architecture documentation for expert knowledge
+loadDocResources();
 
 /** Constants */
 const MAX_LIMIT = 50;
@@ -161,15 +165,7 @@ server.registerTool(
     },
   },
   async ({ goal, limit = 5 }) => {
-    const query = (goal || "").trim();
-    if (!query) {
-      return {
-        content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query: goal }, null, 2) }]
-      };
-    }
-
-    // Split query into words (simple tokenization)
-    const queryWords = query.toLowerCase().split(/\s+/).filter(word => word.length > 2);
+    const queryWords = goal.trim().toLowerCase().split(/\s+/).filter(word => word.length > 2);
 
     // Score all tests
     const rankedTests = Array.from(testByName.values())
@@ -180,17 +176,17 @@ server.registerTool(
 
     if (rankedTests.length === 0) {
       return {
-        content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query }, null, 2) }]
+        content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query: goal }, null, 2) }]
       };
     }
 
     // Extract and score commands
     const pool = extractAndScoreCommands(rankedTests, queryWords);
-    const topCommands = deduplicateAndSort(pool, limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const topCommands = deduplicateAndSort(pool, limit || DEFAULT_LIMIT, MAX_LIMIT);
 
     if (topCommands.length === 0) {
       return {
-        content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query }, null, 2) }]
+        content: [{ type: "text", text: JSON.stringify({ error: "NO_MATCH", query: goal }, null, 2) }]
       };
     }
 
@@ -198,7 +194,6 @@ server.registerTool(
     const commands = topCommands.map(cmd => {
       const { cleaned, changes } = cleanCommand(cmd.command);
       const validation = validateGpacCommand(cleaned);
-
       return {
         test: cmd.test,
         subtest: cmd.subtest,
@@ -206,11 +201,10 @@ server.registerTool(
         command: cleaned,
         file: cmd.file,
         line: cmd.line,
-        originalCommand: changes.length > 0 ? cmd.command : undefined,
-        cleaningNotes: changes.length > 0 ? changes : undefined,
+        ...(changes.length > 0 && { originalCommand: cmd.command, cleaningNotes: changes }),
         confidence: cmd.score >= 3 ? "high" : "medium",
         validated: validation.valid,
-        validationErrors: validation.valid ? undefined : validation.errors
+        ...(validation.errors.length > 0 && { validationErrors: validation.errors })
       };
     });
 
@@ -223,7 +217,7 @@ server.registerTool(
         valid: validCommands.length,
         invalid: invalidCommands.length,
         commands: validCommands,
-        invalidCommands: invalidCommands.length > 0 ? invalidCommands : undefined,
+        ...(invalidCommands.length > 0 && { invalidCommands }),
         note: `Found ${validCommands.length} valid command(s)${invalidCommands.length > 0 ? ` (${invalidCommands.length} invalid)` : ""}.`
       }, null, 2) }]
     };
@@ -281,33 +275,22 @@ server.registerTool(
     // 2. Execute in sandbox
     try {
       const result = await executeInSandbox(command, workDir);
-
-      if (result.exitCode !== 0) {
-        return {
-          content: [{
-            type: "text",
-            text: formatErrorResponse("Execution Failed", result)
-          }]
-        };
-      }
-
-      // Detect output type (XML if contains <?xml)
-      const outputType = result.stdout.trim().startsWith("<?xml") ? "xml" : "text";
+      const responseText = result.exitCode === 0
+        ? formatSuccessResponse("Command Executed Successfully", result)
+        : formatErrorResponse("Execution Failed", result);
 
       return {
-        content: [{
-          type: "text",
-          text: formatSuccessResponse("Command Executed Successfully", result, outputType)
-        }]
+        content: [{ type: "text", text: responseText }]
       };
     } catch (error: any) {
       return {
         content: [{
           type: "text",
-          text: formatErrorResponse(
-            "Execution Error",
-            { exitCode: 1, stdout: "", stderr: error.message }
-          )
+          text: formatErrorResponse("Execution Error", {
+            exitCode: 1,
+            stdout: "",
+            stderr: error.message
+          })
         }]
       };
     }
