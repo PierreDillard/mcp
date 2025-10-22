@@ -13,6 +13,7 @@ import { buildMP4BoxIndex } from "./utils/mp4box-docs.js";
 import { cleanCommand } from "./utils/command-cleaner.js";
 import { executeInSandbox, formatSuccessResponse, formatErrorResponse } from "./utils/executor.js";
 import { loadDocResources } from "./utils/doc-ressources.js";
+import type { ToolMeta } from "./utils/types.js";
 
 const XML_PATH = process.env.XML_TESTS_PATH || "./all_tests_descriptions.xml";
 const ALIASES_PATH = process.env.ALIASES_PATH || "./aliases.json";
@@ -61,6 +62,7 @@ server.registerTool(
       "",
       "IMPORTANT: Always validate commands before presenting to user."
     ].join("\n"),
+    
     inputSchema: {
       command: z.string().min(1).describe("GPAC/MP4Box command to validate")
     }
@@ -158,6 +160,10 @@ server.registerTool(
       "• { total, valid, invalid, commands: [...valid], invalidCommands?: [...], note } on success",
       "• { error: 'NO_MATCH', query } on failure"
     ].join("\n"),
+    _meta: {
+      internalDocs: "doc/filters_gen.md",
+      visibility: "internal"
+    } satisfies ToolMeta,
     inputSchema: {
       goal: z.string().min(2).describe("User intent in natural language or concise keywords."),
       limit: z.number().int().min(1).max(MAX_LIMIT).optional()

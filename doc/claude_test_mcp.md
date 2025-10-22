@@ -552,3 +552,73 @@ Compresses the moov box, eliminating redundant metadata entries.
 **Note on timecodes specifically:**
 
 For SEI-based timecodes in bitstreams (AVC/H.264, HEVC/H.265, VVC), use the `bsrw` filter (see "How do I remove SEI messages and inject timecodes" for detailed timecode manipulation options).
+
+## Q: How can I add or remove watermarks on a video with GPAC?
+
+**A:** GPAC provides several options for adding watermarks (overlays) to video, but does not have built-in watermark removal tools.
+
+### Adding Watermarks
+
+**Option 1: Using AVMix Filter (Recommended)**
+
+The `avmix` filter is the most modern and flexible approach for compositing and overlaying content:
+
+```bash
+gpac -i video.mp4 avmix:config=overlay.json -o output.mp4
+```
+
+With a JSON configuration file for text watermark:
+```json
+[
+  { "id": "seq1", "seq": [ { "src": [{"in": "video.mp4"}] } ] },
+  { "id": "v1", "sources": ["seq1"] },
+  { "id": "text_overlay", "width": 200, "height": 40, "text": ["Watermark"], "size": 30, "fill": "white", "y": -45 }
+]
+```
+
+**Option 2: Using Compositor with BIFS Scene**
+
+For complex overlays, use BIFS (Binary Format for Scenes):
+
+```bash
+gpac -i video.mp4 -i overlay.bt compositor -o output.mp4
+```
+
+The `overlay.bt` file describes the watermark scene with text, images, or animations positioned over the video background.
+
+**Option 3: JavaScript Filter (jsf)**
+
+For pixel-level control and custom effects:
+
+```bash
+gpac -i video.mp4 jsf:script=watermark.js -o output.mp4
+```
+
+### Removing Watermarks
+
+Unfortunately, **GPAC does not have built-in watermark removal tools**. Watermark removal is a complex task that depends on:
+- Watermark position, size, and style
+- The underlying content complexity
+- Whether the watermark is opaque or transparent
+
+**Possible workarounds:**
+- **Cropping**: If the watermark is in a known location, crop that area
+  ```bash
+  gpac -i video.mp4 ffsws:osize=1920x1000 -o output.mp4
+  ```
+- **Masking**: Replace the watermark area with solid color (requires custom filter)
+- **Inpainting**: Advanced image reconstruction (would need custom JavaScript or external tool)
+
+### Inspecting Video Properties
+
+To check video resolution and properties before processing:
+```bash
+MP4Box -info input.mp4
+```
+
+### Use Cases
+
+- Adding channel/copyright logos to broadcast videos
+- Adding timers or metrics overlays
+- Compositing multiple video sources
+- Adding metadata overlays (text, graphics)

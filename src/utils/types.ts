@@ -38,3 +38,16 @@ export type OptionInfo = {
   option: string;
   desc: string;
 };
+
+/**
+ * Metadata for MCP tool registration
+ * Used to provide additional context about tool documentation and visibility
+ */
+export type ToolMeta = {
+  /** Path to internal documentation file relative to project root */
+  internalDocs?: string;
+  /** Visibility level of the tool (internal, public, experimental, etc.) */
+  visibility?: "internal" | "public" | "experimental" | "deprecated";
+  /** Additional custom metadata fields */
+  [key: string]: unknown;
+};
